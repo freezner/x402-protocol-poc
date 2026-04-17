@@ -16,10 +16,13 @@ async function main() {
   try {
     const { paymentMiddlewareFromConfig } = await import("@x402/express");
     const { HTTPFacilitatorClient } = await import("@x402/core/server");
+    const { ExactEvmScheme } = await import("@x402/evm/exact/server");
 
     const facilitatorClient = new HTTPFacilitatorClient({
       url: config.facilitator.url,
     });
+
+    const network = `eip155:${config.chain.id}` as const;
 
     // RoutesConfig: Record<path, RouteConfig>
     const routes = Object.fromEntries(
@@ -30,14 +33,18 @@ async function main() {
             scheme: "exact",
             payTo: config.server.walletAddress as `0x${string}`,
             price: route.price,
-            network: `eip155:${config.chain.id}` as const,
+            network,
           },
           description: route.description,
         },
       ])
     );
 
-    app.use(paymentMiddlewareFromConfig(routes, facilitatorClient));
+    app.use(
+      paymentMiddlewareFromConfig(routes, facilitatorClient, [
+        { network, server: new ExactEvmScheme() },
+      ])
+    );
 
     for (const route of PAID_ROUTES) {
       console.log(
