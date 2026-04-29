@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { settingsStore } from "./settings.js";
 
 export const config = {
   agent: {
@@ -23,20 +24,30 @@ export const config = {
   },
 } as const;
 
+/** settings 파일 우선, 없으면 .env 폴백 */
+export function getAgentPrivateKey(): string {
+  return settingsStore.getAgentPrivateKey() ?? config.agent.privateKey;
+}
+
+/** settings 파일 우선, 없으면 .env 폴백 */
+export function getServerWalletAddress(): string {
+  return settingsStore.getServerWalletAddress() ?? config.server.walletAddress;
+}
+
 export function validateConfig(keys: (keyof typeof config)[]) {
   const missing: string[] = [];
 
-  if (keys.includes("agent") && !config.agent.privateKey) {
-    missing.push("AGENT_PRIVATE_KEY");
+  if (keys.includes("agent") && !getAgentPrivateKey()) {
+    missing.push("AGENT_PRIVATE_KEY (.env 또는 /settings 메뉴에서 설정)");
   }
-  if (keys.includes("server") && !config.server.walletAddress) {
-    missing.push("SERVER_WALLET_ADDRESS");
+  if (keys.includes("server") && !getServerWalletAddress()) {
+    missing.push("SERVER_WALLET_ADDRESS (.env 또는 /settings 메뉴에서 설정)");
   }
 
   if (missing.length > 0) {
     throw new Error(
-      `Missing required environment variables: ${missing.join(", ")}\n` +
-      `Copy .env.example to .env and fill in the values.`
+      `Missing required config: ${missing.join(", ")}\n` +
+      `Copy .env.example to .env or configure via the /settings page.`
     );
   }
 }

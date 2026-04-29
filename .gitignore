@@ -15,6 +15,7 @@ dist/
 .env
 .env.*
 !.env.example
+.settings.json
 
 # 개인키, 인증서 파일
 *.pem

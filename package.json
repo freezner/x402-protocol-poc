@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
+    "start": "node dist/server/index.js",
     "dev:server": "tsx src/server/index.ts",
     "dev:agent": "tsx src/agent/index.ts",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:agent\"",

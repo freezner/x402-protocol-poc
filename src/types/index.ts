@@ -35,3 +35,12 @@ export interface HealthResponse {
 export interface PriceListResponse {
   routes: PaidRoute[];
 }
+
+export interface DemoScenarioStep {
+  merchant: string;
+  amountKrw: number;
+  category: "transport" | "stay" | "food" | "content";
+  endpoint: string;
+  usdcPrice: string;
+  detail: string;
+}

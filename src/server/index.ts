@@ -1,8 +1,10 @@
 import express from "express";
-import { config, validateConfig } from "../config/index.js";
+import { config, validateConfig, getServerWalletAddress } from "../config/index.js";
+import { settingsStore } from "../config/settings.js";
 import routes, { PAID_ROUTES } from "./routes.js";
 
 async function main() {
+  settingsStore.load();
   validateConfig(["server"]);
 
   const app = express();
@@ -31,7 +33,7 @@ async function main() {
         {
           accepts: {
             scheme: "exact",
-            payTo: config.server.walletAddress as `0x${string}`,
+            payTo: getServerWalletAddress() as `0x${string}`,
             price: route.price,
             network,
           },
@@ -73,7 +75,7 @@ async function main() {
     console.log(`  http://localhost:${config.server.port}`);
     console.log(`  Chain: ${config.chain.name} (ID: ${config.chain.id})`);
     console.log(`  Facilitator: ${config.facilitator.url}`);
-    console.log(`  Recipient: ${config.server.walletAddress}`);
+    console.log(`  Recipient: ${getServerWalletAddress()}`);
     console.log("=".repeat(60));
     console.log("");
     console.log("[server] Paid routes:");
