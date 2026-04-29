@@ -320,7 +320,8 @@ router.get("/mockups", (_req, res) => {
     .wallet-role { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 2px; }
     .wallet-role.payer { color: #f87171; }
     .wallet-role.receiver { color: #34d399; }
-    .wallet-addr { font-family: monospace; font-size: 0.65rem; color: #444; margin-bottom: 6px; }
+    .wallet-addr { font-family: monospace; font-size: 0.65rem; color: #444; margin-bottom: 6px; display: block; text-decoration: none; }
+    .wallet-addr:hover { color: #6b7280; }
     .wallet-usdc { font-size: 1rem; font-weight: 700; color: #e2e8f0; line-height: 1.2; }
     .wallet-usdc .unit { font-size: 0.62rem; font-weight: 400; color: #555; margin-left: 3px; }
     .wallet-eth { font-size: 0.65rem; color: #374151; margin-top: 3px; }
@@ -899,9 +900,10 @@ function renderWallets(wallets) {
       delta = \`<span class="wallet-delta \${diff > 0 ? 'up' : 'down'}">\${diff > 0 ? '+' : ''}\${diff.toFixed(4)}</span>\`;
     }
     prevUsdc[w.address] = curr;
+    const basescanUrl = \`https://sepolia.basescan.org/address/\${w.address}\`;
     return \`<div class="wallet-card">
       <div class="wallet-role \${w.role}">\${w.label} · \${w.role === 'payer' ? 'Payer' : 'Receiver'}</div>
-      <div class="wallet-addr">\${truncAddr(w.address)}</div>
+      <a class="wallet-addr" href="\${basescanUrl}" target="_blank" rel="noopener" title="\${w.address}">\${truncAddr(w.address)} ↗</a>
       <div class="wallet-usdc">\${parseFloat(w.usdc).toFixed(4)}\${delta}<span class="unit">USDC</span></div>
       <div class="wallet-eth">\${parseFloat(w.eth).toFixed(5)} ETH</div>
     </div>\`;
