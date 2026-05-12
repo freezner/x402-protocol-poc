@@ -192,6 +192,9 @@ export function getMockupHtml(): string {
       .status-bar { height: 44px; }
     }
 
+    /* ── Mobile UA: hide status bar (real device has its own) ── */
+    body.is-mobile .status-bar { display: none; }
+
     /* ══════════════════════════════════════════════════════
        App-level styles
     ══════════════════════════════════════════════════════ */
@@ -1065,6 +1068,11 @@ export function getMockupHtml(): string {
 
 <script>
 const $ = id => document.getElementById(id);
+
+/* ── Mobile UA detection: hide mockup status bar on real devices ── */
+if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  document.body.classList.add('is-mobile');
+}
 
 /* ── Auto-scale device to fit viewport ─────────────── */
 function scaleDevice() {
