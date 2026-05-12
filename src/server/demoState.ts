@@ -1,9 +1,12 @@
+import { kvGet, kvSet } from "./db.js";
+
 export interface DemoTransaction {
   id: string;
   kind: "trip" | "content" | "blocked";
   merchant: string;
   category: "transport" | "stay" | "food" | "content" | "risk";
   amountKrw: number;
+  amountUsdc?: string;   // 실제 온체인 결제 금액 (e.g. "0.005")
   endpoint?: string;
   ai: string;
   status: "approved" | "blocked";
@@ -16,6 +19,7 @@ export interface DemoAccountState {
   monthlyLimitKrw: number;
   usedKrw: number;
   categoryLimits: Record<"transport" | "stay" | "food" | "content", number>;
+  categoryLimitsUsdc: Record<"transport" | "stay" | "food" | "content", number>;
   categoryUsage: Record<"transport" | "stay" | "food" | "content", number>;
   delegatedAi: {
     name: string;
@@ -45,6 +49,7 @@ export interface BudgetSettings {
   monthlyTotal: number;
   autoRenew: boolean;
   categories: Record<string, { limit: number; alertAt: number }>;
+  categoriesUsdc: Record<string, { limit: number }>;
 }
 
 export interface AutoChargeSettings {
@@ -75,6 +80,12 @@ const initialState = (): DemoAccountState => ({
     food: 200_000,
     content: 50_000,
   },
+  categoryLimitsUsdc: {
+    transport: 0.10,
+    stay:      0.10,
+    food:      0.05,
+    content:   0.05,
+  },
   categoryUsage: {
     transport: 0,
     stay: 0,
@@ -95,7 +106,15 @@ const initialState = (): DemoAccountState => ({
 });
 
 class DemoStateStore {
-  private state: DemoAccountState = initialState();
+  private state: DemoAccountState;
+
+  constructor() {
+    this.state = kvGet<DemoAccountState>("demo_account") ?? initialState();
+  }
+
+  private save(): void {
+    kvSet("demo_account", this.state);
+  }
 
   getAccount(): DemoAccountState {
     return structuredClone(this.state);
@@ -103,6 +122,7 @@ class DemoStateStore {
 
   reset(): DemoAccountState {
     this.state = initialState();
+    this.save();
     return this.getAccount();
   }
 
@@ -121,6 +141,7 @@ class DemoStateStore {
     }
     this.state.fraudAttemptPending = true;
     this.state.lastUpdatedAt = new Date().toISOString();
+    this.save();
     return tx;
   }
 
@@ -141,6 +162,7 @@ class DemoStateStore {
     this.state.preventedLossKrw += amountKrw;
     this.state.fraudAttemptPending = false;
     this.state.lastUpdatedAt = new Date().toISOString();
+    this.save();
     return tx;
   }
 
@@ -189,65 +211,98 @@ export const demoStateStore = new DemoStateStore();
 // ============================================================
 
 class BudgetStore {
-  private data: BudgetSettings = {
-    monthlyTotal: 1_000_000,
-    autoRenew: true,
-    categories: {
-      transport: { limit: 300_000, alertAt: 80 },
-      stay:      { limit: 500_000, alertAt: 80 },
-      food:      { limit: 200_000, alertAt: 80 },
-      content:   { limit: 50_000,  alertAt: 80 },
-    },
-  };
+  private data: BudgetSettings;
+
+  constructor() {
+    this.data = kvGet<BudgetSettings>("budget") ?? {
+      monthlyTotal: 1_000_000,
+      autoRenew: true,
+      categories: {
+        transport: { limit: 300_000, alertAt: 80 },
+        stay:      { limit: 500_000, alertAt: 80 },
+        food:      { limit: 200_000, alertAt: 80 },
+        content:   { limit: 50_000,  alertAt: 80 },
+      },
+      categoriesUsdc: {
+        transport: { limit: 0.10 },
+        stay:      { limit: 0.10 },
+        food:      { limit: 0.05 },
+        content:   { limit: 0.05 },
+      },
+    };
+  }
+
   get(): BudgetSettings { return structuredClone(this.data); }
+
   update(patch: Partial<BudgetSettings>): BudgetSettings {
-    if (patch.monthlyTotal !== undefined) this.data.monthlyTotal = patch.monthlyTotal;
-    if (patch.autoRenew    !== undefined) this.data.autoRenew    = patch.autoRenew;
-    if (patch.categories   !== undefined) Object.assign(this.data.categories, patch.categories);
+    if (patch.monthlyTotal   !== undefined) this.data.monthlyTotal   = patch.monthlyTotal;
+    if (patch.autoRenew      !== undefined) this.data.autoRenew      = patch.autoRenew;
+    if (patch.categories     !== undefined) Object.assign(this.data.categories, patch.categories);
+    if (patch.categoriesUsdc !== undefined) Object.assign(this.data.categoriesUsdc, patch.categoriesUsdc);
+    kvSet("budget", this.data);
     return this.get();
   }
 }
 
 class AutoChargeStore {
-  private data: AutoChargeSettings = {
-    enabled:             true,
-    autoApproveUnder:    50_000,
-    confirmRequiredOver: 500_000,
-    dailyCap:            300_000,
-    accumulatedToday:    0,
-  };
+  private data: AutoChargeSettings;
+
+  constructor() {
+    this.data = kvGet<AutoChargeSettings>("auto_charge") ?? {
+      enabled:             true,
+      autoApproveUnder:    50_000,
+      confirmRequiredOver: 500_000,
+      dailyCap:            300_000,
+      accumulatedToday:    0,
+    };
+  }
+
   get(): AutoChargeSettings { return structuredClone(this.data); }
+
   update(patch: Partial<AutoChargeSettings>): AutoChargeSettings {
     Object.assign(this.data, patch);
+    kvSet("auto_charge", this.data);
     return this.get();
   }
-  addAccumulated(amount: number): void { this.data.accumulatedToday += amount; }
-  resetDaily(): void { this.data.accumulatedToday = 0; }
+
+  addAccumulated(amount: number): void {
+    this.data.accumulatedToday += amount;
+    kvSet("auto_charge", this.data);
+  }
+
+  resetDaily(): void {
+    this.data.accumulatedToday = 0;
+    kvSet("auto_charge", this.data);
+  }
 }
 
 class M2MWalletStore {
-  private data: M2MWalletConfig = {
-    enabled:             true,
-    walletAddress:       "0x1002190240010001x402DemoWallet",
-    network:             "base-sepolia",
-    perRequestLimitUsdc: 0.05,
-    sessionLimitUsdc:    1.00,
-    whitelistedAgents: [
-      { name: "ClaudeAssist", address: "0xAI01...c821", trustGrade: "A" },
-      { name: "GPT Travel",   address: "0xAI02...f103", trustGrade: "A" },
-    ],
-    facilitatorUrl: "https://x402.org/facilitator",
-  };
+  private data: M2MWalletConfig;
+
+  constructor() {
+    this.data = kvGet<M2MWalletConfig>("m2m_wallet") ?? {
+      enabled:             true,
+      walletAddress:       "0x1002190240010001x402DemoWallet",
+      network:             "base-sepolia",
+      perRequestLimitUsdc: 0.05,
+      sessionLimitUsdc:    1.00,
+      whitelistedAgents:   [],
+      facilitatorUrl:      "https://x402.org/facilitator",
+    };
+  }
+
   get(): M2MWalletConfig { return structuredClone(this.data); }
+
   update(patch: Partial<M2MWalletConfig>): M2MWalletConfig {
     if (patch.enabled             !== undefined) this.data.enabled             = patch.enabled;
     if (patch.perRequestLimitUsdc !== undefined) this.data.perRequestLimitUsdc = patch.perRequestLimitUsdc;
     if (patch.sessionLimitUsdc    !== undefined) this.data.sessionLimitUsdc    = patch.sessionLimitUsdc;
     if (patch.whitelistedAgents   !== undefined) this.data.whitelistedAgents   = patch.whitelistedAgents;
+    kvSet("m2m_wallet", this.data);
     return this.get();
   }
 }
 
-export const budgetStore    = new BudgetStore();
+export const budgetStore     = new BudgetStore();
 export const autoChargeStore = new AutoChargeStore();
 export const m2mWalletStore  = new M2MWalletStore();

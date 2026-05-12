@@ -8,6 +8,7 @@ import type {
 import { config, getAgentPrivateKey, getServerWalletAddress } from "../config/index.js";
 import { settingsStore } from "../config/settings.js";
 import { getBankDemoHtml } from "./bankDemo.js";
+import { getMockupHtml } from "./mockup.js";
 import { demoStateStore, budgetStore, autoChargeStore, m2mWalletStore } from "./demoState.js";
 
 const router = Router();
@@ -1052,6 +1053,11 @@ router.get("/bank-demo", (_req, res) => {
   res.send(getBankDemoHtml());
 });
 
+router.get("/mockup", (_req, res) => {
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.send(getMockupHtml());
+});
+
 // ============================================================
 // 무료 엔드포인트
 // ============================================================
@@ -1553,7 +1559,12 @@ async function callPaidEndpoint(fetchFn: typeof fetch, endpoint: string) {
   const elapsedMs = Date.now() - startedAt;
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
-    throw new Error(`HTTP ${response.status} ${endpoint} ${detail.slice(0, 120)}`);
+    let hint = detail.slice(0, 200);
+    // x402 퍼실리테이터가 결제를 거부한 경우 → 빈 바디({}) 가능
+    if (response.status === 402 && (!hint || hint === "{}")) {
+      hint = "퍼실리테이터가 결제를 거부했습니다 (레이트리밋 또는 잔고 부족)";
+    }
+    throw new Error(`HTTP ${response.status} ${endpoint}: ${hint}`);
   }
   const payload = await response.json();
   return { endpoint, elapsedMs, payload };
@@ -1573,13 +1584,17 @@ async function runPaidScenario(
     usdcPrice: string;
   }> = [];
 
-  for (const step of steps) {
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i];
+    // 연속 결제 간 딜레이: 퍼실리테이터 레이트리밋 및 이전 tx 제출 대기
+    if (i > 0) await new Promise(r => setTimeout(r, 800));
     const paid = await callPaidEndpoint(fetchFn, step.endpoint);
     demoStateStore.addApprovedTransaction({
       kind,
       merchant: step.merchant,
       category: step.category,
       amountKrw: step.amountKrw,
+      amountUsdc: step.usdcPrice,
       endpoint: step.endpoint,
       ai: "ClaudeAssist",
       detail: step.detail,
@@ -1623,7 +1638,16 @@ router.post("/api/demo/trigger", async (req, res) => {
 });
 
 router.get("/api/demo/account", (_req, res) => {
-  res.json(demoStateStore.getAccount());
+  const account = demoStateStore.getAccount();
+  // categoryLimitsUsdc를 budgetStore 기준으로 덮어써 설정 변경이 즉시 반영되게 함
+  const bu = budgetStore.get().categoriesUsdc;
+  account.categoryLimitsUsdc = {
+    transport: bu.transport.limit,
+    stay:      bu.stay.limit,
+    food:      bu.food.limit,
+    content:   bu.content.limit,
+  };
+  res.json(account);
 });
 
 router.post("/api/demo/reset", (_req, res) => {
@@ -1708,6 +1732,137 @@ router.get("/api/demo/m2m", (_req, res) => {
 router.post("/api/demo/m2m", (req, res) => {
   const updated = m2mWalletStore.update(req.body as Parameters<typeof m2mWalletStore.update>[0]);
   res.json({ ok: true, m2mConfig: updated });
+});
+
+// ============================================================
+// 데모 설정 통합 API
+// ============================================================
+
+router.get("/api/demo/settings", (_req, res) => {
+  res.json({
+    budget: budgetStore.get(),
+    autoCharge: autoChargeStore.get(),
+    m2m: m2mWalletStore.get(),
+  });
+});
+
+router.post("/api/demo/settings", (req, res) => {
+  const { budget, autoCharge, m2m } = req.body as {
+    budget?: Parameters<typeof budgetStore.update>[0];
+    autoCharge?: Parameters<typeof autoChargeStore.update>[0];
+    m2m?: Parameters<typeof m2mWalletStore.update>[0];
+  };
+  if (budget) budgetStore.update(budget);
+  if (autoCharge) autoChargeStore.update(autoCharge);
+  if (m2m) m2mWalletStore.update(m2m);
+  res.json({ ok: true });
+});
+
+// ============================================================
+// M2M 에이전트 등록
+// ============================================================
+
+router.post("/api/demo/m2m-register", (req, res) => {
+  const { agentName, address, trustGrade, perRequestLimitUsdc, sessionLimitUsdc } = req.body as {
+    agentName: string;
+    address: string;
+    trustGrade: string;
+    perRequestLimitUsdc: number;
+    sessionLimitUsdc: number;
+  };
+  m2mWalletStore.update({
+    perRequestLimitUsdc,
+    sessionLimitUsdc,
+    whitelistedAgents: [{ name: agentName, address, trustGrade }],
+  });
+  res.json({ ok: true });
+});
+
+// ============================================================
+// M2M 에이전트 자율 실행
+// ============================================================
+
+const M2M_STEPS = [
+  {
+    endpoint: "/api/premium/trip/railgo",
+    usdcPrice: "0.01",
+    merchant: "ClaudeAssist Auto",
+    category: "transport" as const,
+    amountKrw: 0,
+    detail: "M2M 자율결제 · 출장 교통 조회",
+  },
+  {
+    endpoint: "/api/premium/content/brief-1",
+    usdcPrice: "0.005",
+    merchant: "ClaudeAssist Auto",
+    category: "content" as const,
+    amountKrw: 0,
+    detail: "M2M 자율결제 · 콘텐츠 브리프 조회",
+  },
+];
+
+router.post("/api/demo/m2m-run", async (_req, res) => {
+  try {
+    const results = await runPaidScenario(M2M_STEPS, "trip");
+    res.json({ ok: true, steps: results });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ============================================================
+// KTX 에이전트 예약 (에이전트 결제 데모)
+// ============================================================
+
+router.post("/api/demo/ktx-reserve", async (_req, res) => {
+  try {
+    const fetchFn = await getAgentFetch();
+    const paid = await callPaidEndpoint(fetchFn, "/api/premium/trip/railgo");
+    demoStateStore.addApprovedTransaction({
+      kind: "trip",
+      merchant: "코레일 (KTX)",
+      category: "transport",
+      amountKrw: 59800,
+      amountUsdc: "0.01",
+      endpoint: "/api/premium/trip/railgo",
+      ai: "ClaudeAssist",
+      detail: "KTX 101호 서울→부산 일반실 9호차 15A",
+    });
+    res.json({ ok: true, elapsedMs: paid.elapsedMs });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// ============================================================
+// PassKey 서명 + 결제 보고
+// ============================================================
+
+router.post("/api/demo/sign-and-pay", async (req, res) => {
+  const body = req.body as {
+    merchant: string;
+    amountKrw: number;
+    category: "transport" | "stay" | "food" | "content";
+    detail: string;
+    endpoint?: string;
+  };
+  try {
+    const fetchFn = await getAgentFetch();
+    const ep = body.endpoint || "/api/premium/summary";
+    const paid = await callPaidEndpoint(fetchFn, ep);
+    const tx = demoStateStore.addApprovedTransaction({
+      kind: "trip",
+      merchant: body.merchant,
+      category: body.category,
+      amountKrw: body.amountKrw,
+      endpoint: ep,
+      ai: "ClaudeAssist",
+      detail: body.detail,
+    });
+    res.json({ ok: true, transaction: tx, account: demoStateStore.getAccount(), elapsedMs: paid.elapsedMs });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
 });
 
 // ============================================================
