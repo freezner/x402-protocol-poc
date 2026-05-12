@@ -669,7 +669,6 @@ export function getMockupHtml(): string {
                 <div class="accordion-hd-title">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
                   에이전트 결제
-                  <span style="font-size:9px;font-weight:700;padding:2px 6px;border-radius:999px;background:#edf4ff;color:var(--accent)">BETA</span>
                 </div>
                 <div class="accordion-hd-sub">KTX 열차 예약 · ClaudeAssist 자율 처리</div>
               </div>
@@ -857,29 +856,84 @@ export function getMockupHtml(): string {
         </div>
       </div>
 
-      <!-- M4 · PassKey -->
+      <!-- M4 · Wallet -->
       <div class="screen" id="M4">
         <div class="top-nav">
-          <button class="back" onclick="go('M1')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            자산
-          </button>
           <div class="spacer"></div>
-          <div class="title">PassKey 서명</div>
+          <div class="title">지갑</div>
           <div class="spacer"></div>
         </div>
         <div class="content">
-          <div class="card passkey-box">
-            <div class="passkey-icon">🔐</div>
-            <div style="font-size:18px;font-weight:700;margin-bottom:6px">PassKey로 서명하기</div>
-            <div class="sub">생체인식 또는 보안 키로 x402 결제를 서명합니다.</div>
-            <button class="btn" id="m4-btn" onclick="signWithPasskey()" style="margin-top:20px">서명 시작</button>
-            <div class="status" id="m4-status"></div>
+
+          <!-- 지갑 잔고 카드 -->
+          <div class="card primary">
+            <div class="lbl">디지털자산 잔고</div>
+            <div class="amount" id="m4-balance">—</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px">
+              <div>
+                <div style="font-size:10px;color:rgba(255,255,255,.6);margin-bottom:3px">지갑 주소</div>
+                <div style="font-family:monospace;font-size:11px;color:rgba(255,255,255,.9)" id="m4-addr">—</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onclick="copyAddress()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;border:none;cursor:pointer;background:rgba(255,255,255,.18);color:#fff">복사</button>
+                <button onclick="openBaseScan()" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:999px;border:none;cursor:pointer;background:rgba(255,255,255,.18);color:#fff">BaseScan</button>
+              </div>
+            </div>
           </div>
-          <div class="card" id="m4-result" style="display:none">
-            <div style="font-size:15px;font-weight:700;margin-bottom:10px">서명 결과</div>
-            <div id="m4-result-body"></div>
+
+          <!-- 자산 목록 -->
+          <div class="card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:12px">보유 자산</div>
+            <div class="setting-row">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">$</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600">USD Coin</div>
+                  <div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:14px;font-weight:700" id="m4-usdc">—</div>
+                <div style="font-size:11px;color:var(--muted)">USDC</div>
+              </div>
+            </div>
+            <div class="setting-row" style="border:none">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:32px;height:32px;border-radius:50%;background:#627eea;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">Ξ</div>
+                <div>
+                  <div style="font-size:13px;font-weight:600">Ethereum</div>
+                  <div style="font-size:11px;color:var(--muted)">ETH · 가스비</div>
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-size:14px;font-weight:700" id="m4-eth">—</div>
+                <div style="font-size:11px;color:var(--muted)">ETH</div>
+              </div>
+            </div>
           </div>
+
+          <!-- 네트워크 정보 -->
+          <div class="card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:12px">네트워크</div>
+            <div class="setting-row"><span>체인</span><span class="chip">Base Sepolia</span></div>
+            <div class="setting-row"><span>체인 ID</span><span class="chip">84532</span></div>
+            <div class="setting-row" style="border:none"><span>Facilitator</span><span style="font-size:11px;color:var(--muted)">x402.org</span></div>
+          </div>
+
+          <!-- 보안 -->
+          <div class="card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:12px">보안</div>
+            <div class="setting-row" style="border:none">
+              <div>
+                <div style="font-size:13px;font-weight:600">PassKey</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">생체인식으로 결제 서명을 보호합니다</div>
+              </div>
+              <button class="btn secondary" id="m4-passkey-btn" onclick="registerWalletPasskey()" style="width:auto;padding:8px 14px;font-size:12px;margin:0">등록</button>
+            </div>
+            <div class="status" id="m4-passkey-status"></div>
+          </div>
+
+          <div class="status" id="m4-copy-status"></div>
         </div>
       </div>
 
@@ -915,13 +969,12 @@ export function getMockupHtml(): string {
           </button>
           <button class="tab-item" onclick="go('M4')" data-nav="M4">
             <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 2C9 2 6.5 4.5 6.5 8c0 2 .8 3.8 2 5"/>
-              <path d="M12 2c3 0 5.5 2.5 5.5 6 0 2-.8 3.8-2 5"/>
-              <path d="M8.5 13c0 2 .8 3.8 2 4.8"/>
-              <path d="M15.5 13c0 2-.8 3.8-2 4.8"/>
-              <path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/>
+              <rect x="2" y="7" width="20" height="14" rx="3"/>
+              <path d="M16 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
+              <path d="M2 10h20"/>
+              <path d="M6 4l4-1.5 4 1.5"/>
             </svg>
-            <span>서명</span>
+            <span>지갑</span>
           </button>
         </div>
       </div>
@@ -1097,6 +1150,7 @@ function go(id) {
     tb.style.display = 'block';
     if (id === 'M1') loadAccount();
     if (id === 'M3') loadSettings();
+    if (id === 'M4') loadWallet();
   }
 }
 
@@ -1689,60 +1743,84 @@ async function runM2mAgent() {
   }
 }
 
-/* ── M4: PassKey ──────────────────────────────────── */
-async function signWithPasskey() {
-  const btn        = $('m4-btn');
-  const resultBox  = $('m4-result');
-  const resultBody = $('m4-result-body');
-  btn.disabled = true; btn.textContent = '서명 중...';
-  $('m4-status').className = 'status';
+/* ── M4: Wallet ───────────────────────────────────── */
+let m4WalletAddress = '';
+
+async function loadWallet() {
+  try {
+    const res = await fetch('/api/free/balances');
+    if (!res.ok) throw new Error('잔고 조회 실패');
+    const data = await res.json();
+    const agent = data.wallets?.find(w => w.role === 'payer');
+    if (!agent) throw new Error('지갑 정보 없음');
+
+    m4WalletAddress = agent.address || '';
+    const usdc = parseFloat(agent.usdc).toFixed(4);
+    const eth  = parseFloat(agent.eth).toFixed(6);
+    const addrShort = m4WalletAddress.length > 12
+      ? m4WalletAddress.slice(0, 6) + '...' + m4WalletAddress.slice(-4)
+      : m4WalletAddress;
+
+    $('m4-balance').textContent = usdc + ' USDC';
+    $('m4-addr').textContent    = addrShort;
+    $('m4-usdc').textContent    = usdc;
+    $('m4-eth').textContent     = eth;
+  } catch (e) {
+    $('m4-balance').textContent = '조회 실패';
+  }
+}
+
+async function copyAddress() {
+  if (!m4WalletAddress) return;
+  try {
+    await navigator.clipboard.writeText(m4WalletAddress);
+    showStatus('m4-copy-status', '✅ 주소가 클립보드에 복사되었습니다.', true);
+    setTimeout(() => { $('m4-copy-status').className = 'status'; }, 2000);
+  } catch {
+    showStatus('m4-copy-status', '주소: ' + m4WalletAddress, true);
+  }
+}
+
+function openBaseScan() {
+  if (!m4WalletAddress) return;
+  window.open('https://sepolia.basescan.org/address/' + m4WalletAddress, '_blank');
+}
+
+async function registerWalletPasskey() {
+  const btn = $('m4-passkey-btn');
+  btn.disabled = true; btn.textContent = '등록 중...';
+  $('m4-passkey-status').className = 'status';
 
   if (!window.PublicKeyCredential) {
-    showStatus('m4-status', '이 브라우저는 PassKey/WebAuthn을 지원하지 않습니다.', false);
-    btn.disabled = false; btn.textContent = '서명 시작';
+    showStatus('m4-passkey-status', '이 브라우저는 PassKey를 지원하지 않습니다.', false);
+    btn.disabled = false; btn.textContent = '등록';
     return;
   }
-
   try {
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const cred = await navigator.credentials.create({
+    await navigator.credentials.create({
       publicKey: {
         challenge,
-        rp: { name: 'x402 Mockup', id: location.hostname },
-        user: { id: new TextEncoder().encode('agent-01'), name: 'AI Agent', displayName: 'ClaudeAssist' },
+        rp: { name: 'JB은행', id: location.hostname },
+        user: {
+          id: new TextEncoder().encode('jbbank-wallet-user'),
+          name: 'wallet@jbbank.co.kr',
+          displayName: '내 지갑 PassKey',
+        },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
         authenticatorSelection: { userVerification: 'required' },
         timeout: 60000,
         attestation: 'none',
-      }
+      },
     });
-    if (!cred) throw new Error('사용자가 서명을 취소했습니다.');
-
-    const payRes = await fetch('/api/demo/sign-and-pay', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        merchant: 'PassKey Demo Merchant',
-        amountKrw: 10000,
-        category: 'food',
-        detail: 'PassKey 서명 후 x402 결제',
-        endpoint: '/api/premium/summary',
-      }),
-    });
-    const payData = await payRes.json();
-    if (!payRes.ok) throw new Error(payData.error);
-
-    showStatus('m4-status', '✅ 서명 및 결제 완료 · ' + payData.elapsedMs + 'ms', true);
-    resultBox.style.display = 'block';
-    resultBody.innerHTML =
-      '<div class="tx-row"><span>가맹점</span><strong>' + payData.transaction.merchant + '</strong></div>' +
-      '<div class="tx-row"><span>금액</span><strong>'   + fmtAmt(payData.transaction.amountKrw) + '</strong></div>' +
-      '<div class="tx-row"><span>상태</span><strong>'   + payData.transaction.status + '</strong></div>' +
-      '<div class="tx-row"><span>잔액</span><strong>'   + fmtAmt(payData.account.balanceKrw) + '</strong></div>';
+    showStatus('m4-passkey-status', '✅ PassKey가 등록되었습니다.', true);
+    btn.textContent = '재등록';
   } catch (e) {
-    showStatus('m4-status', '❌ ' + e.message, false);
+    const msg = e.name === 'NotAllowedError' ? '등록이 취소되었습니다.' : e.message;
+    showStatus('m4-passkey-status', '❌ ' + msg, false);
+    btn.textContent = '등록';
   } finally {
-    btn.disabled = false; btn.textContent = '서명 시작';
+    btn.disabled = false;
   }
 }
 </script>
