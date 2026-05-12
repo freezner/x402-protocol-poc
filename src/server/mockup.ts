@@ -140,7 +140,7 @@ export function getMockupHtml(): string {
       display: flex;
       align-items: flex-end;
       justify-content: space-between;
-      padding: 0 28px 9px;
+      padding: 0 28px 19px;
       position: relative;
       z-index: 50;
     }
