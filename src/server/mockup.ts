@@ -159,6 +159,7 @@ export function getMockupHtml(): string {
       position: relative;
       overflow: hidden;
       background: var(--surface);
+      touch-action: pan-y;
     }
 
     /* ── Home indicator ───────────────────────────────── */
@@ -192,8 +193,9 @@ export function getMockupHtml(): string {
       .status-bar { height: 44px; }
     }
 
-    /* ── Mobile UA: hide status bar (real device has its own) ── */
+    /* ── Mobile UA: hide status bar & home bar (real device has its own) ── */
     body.is-mobile .status-bar { display: none; }
+    body.is-mobile .home-bar   { display: none; }
 
     /* ══════════════════════════════════════════════════════
        App-level styles
@@ -240,6 +242,8 @@ export function getMockupHtml(): string {
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overscroll-behavior: contain;
       padding-bottom: 80px;        /* clear tab bar */
       animation: slideUp .25s cubic-bezier(.2,.8,.2,1);
     }
