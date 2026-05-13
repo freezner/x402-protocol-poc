@@ -3,7 +3,7 @@ import { join } from "path";
 
 const JBBANK_LOGO_B64 = (() => {
   try {
-    return readFileSync(join(process.cwd(), "plan/JBBANK_CI.png")).toString("base64");
+    return readFileSync(join(process.cwd(), "src/assets/JBBANK_CI.png")).toString("base64");
   } catch {
     return "";
   }
