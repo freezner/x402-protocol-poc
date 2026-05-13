@@ -763,7 +763,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                     <div class="ktx-step" id="ktx-s3"><div class="ktx-step-dot" id="ktx-d3">4</div><span>예약 완료</span></div>
                   </div>
                   <button class="btn" id="ktx-run" onclick="runKtxReserve()" style="margin-top:8px">
-                    🤖 에이전트 결제 · 예약 확정
+                    결제 · 예약 확정
                   </button>
                   <div id="ktx-pay-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
                   <div id="ktx-complete-card" style="display:none;margin-top:12px;background:#f0faf5;border:1px solid #c2efd1;border-radius:14px;padding:16px;text-align:center">
@@ -771,6 +771,10 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                     <div style="font-size:15px;font-weight:700;color:#0f6a3e;margin-bottom:6px">예약 완료</div>
                     <div id="ktx-complete-detail" style="font-size:12px;color:var(--muted);line-height:1.6"></div>
                     <div style="font-size:10px;color:var(--muted);margin-top:8px;opacity:.7">코레일 예약번호는 실제 API 연동 시 발급됩니다</div>
+                    <button class="btn" onclick="goKtxHist()" style="margin-top:14px;width:100%;font-size:13px">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h2M8 18h2M13 14h3M13 18h3"/></svg>
+                      예약 내역 보기
+                    </button>
                   </div>
                 </div>
 
@@ -915,6 +919,23 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <div id="m2m-agent-section"></div>
           </div>
           <div class="status" id="m3-status"></div>
+        </div>
+      </div>
+
+      <!-- KTX-HIST · 예약 내역 -->
+      <div class="screen" id="KTX-HIST">
+        <div class="screen-inner">
+          <div class="topbar">
+            <button class="back" onclick="go('M2')">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="topbar-title">KTX 예약 내역</span>
+          </div>
+          <div style="padding:0 0 16px">
+            <div id="ktx-hist-list">
+              <div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">예약 내역이 없습니다</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1211,7 +1232,7 @@ function go(id) {
     n.classList.toggle('active', n.dataset.nav === id)
   );
   const tb = $('tab-bar');
-  if (id === 'M0') {
+  if (id === 'M0' || id === 'KTX-HIST') {
     tb.style.display = 'none';
   } else {
     tb.style.display = 'block';
@@ -1354,6 +1375,70 @@ function ktxPlayGreeting() {
   }, 35);
 }
 
+function goKtxHist() {
+  renderKtxHistList();
+  go('KTX-HIST');
+}
+
+function renderKtxHistList() {
+  const list = $('ktx-hist-list');
+  if (ktxReservations.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">예약 내역이 없습니다</div>';
+    return;
+  }
+  list.innerHTML = ktxReservations.map(function(r) {
+    const usdcAmt = r.priceUsdc ? Number(r.priceUsdc).toFixed(4) : '0.0100';
+    const krwAmt  = r.priceKrw  ? Number(r.priceKrw).toLocaleString('ko-KR') : '-';
+    return (
+      '<div style="background:#fff;border:1px solid #e8edf5;border-radius:16px;margin-bottom:12px;overflow:hidden">' +
+        '<div style="background:var(--primary);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">' +
+          '<div>' +
+            '<div style="color:#fff;font-size:11px;opacity:.75;margin-bottom:2px">' + r.trainNo + '</div>' +
+            '<div style="color:#fff;font-size:18px;font-weight:800;letter-spacing:-.5px">' + r.from + ' → ' + r.to + '</div>' +
+          '</div>' +
+          '<div style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:10px;color:#fff;font-weight:600">예약 확정</div>' +
+        '</div>' +
+        '<div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">' +
+          '<div style="display:flex;gap:8px">' +
+            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:10px 12px">' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">출발</div>' +
+              '<div style="font-size:15px;font-weight:700;color:var(--text)">' + r.depTime + '</div>' +
+              '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + (r.date || '') + '</div>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:11px">' + (r.duration || '') + '</div>' +
+            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:10px 12px;text-align:right">' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">도착</div>' +
+              '<div style="font-size:15px;font-weight:700;color:var(--text)">' + r.arrTime + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:flex;gap:6px">' +
+            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:8px 12px">' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">좌석</div>' +
+              '<div style="font-size:12px;font-weight:600;color:var(--text)">' + (r.car || '-') + ' ' + (r.seat || '') + ' &nbsp;·&nbsp; ' + (r.seatClass || '') + '</div>' +
+            '</div>' +
+            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:8px 12px">' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">인원</div>' +
+              '<div style="font-size:12px;font-weight:600;color:var(--text)">' + (r.passengers || 1) + '명</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="border-top:1px solid #eef1f6;padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end">' +
+            '<div>' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">결제 금액</div>' +
+              '<div style="font-size:16px;font-weight:800;color:var(--primary)">' + usdcAmt + ' USDC</div>' +
+              '<div style="font-size:10px;color:var(--muted)">₩' + krwAmt + ' 환산</div>' +
+            '</div>' +
+            '<div style="text-align:right">' +
+              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">예약번호</div>' +
+              '<div style="font-size:11px;font-weight:700;color:var(--text);font-family:monospace">' + r.reservationNo + '</div>' +
+              '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + r.reservedAt + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
 /* ── M2: Micropayment ─────────────────────────────── */
 async function runMicropayment() {
   const btn = $('m2-run');
@@ -1390,7 +1475,8 @@ async function runMicropayment() {
 
 /* ── KTX 멀티턴 에이전트 챗 ────────────────────────── */
 let ktxTrain = null;
-let ktxMessages = [];  // {role, content} — Claude API 히스토리
+let ktxMessages = [];
+let ktxReservations = [];  // {role, content} — Claude API 히스토리
 
 function ktxPayErr(msg) {
   const el = $('ktx-pay-err');
@@ -1584,6 +1670,25 @@ async function runKtxReserve() {
       ktxTrain.trainNo + ' &nbsp;' + ktxTrain.from + ' → ' + ktxTrain.to + '<br>' +
       ktxTrain.depTime + ' ~ ' + ktxTrain.arrTime +
       ' &nbsp;·&nbsp; ' + usdcAmt + ' · ' + d.elapsedMs + 'ms';
+    // 예약 내역 저장
+    ktxReservations.unshift({
+      trainNo:    ktxTrain.trainNo,
+      from:       ktxTrain.from,
+      to:         ktxTrain.to,
+      date:       ktxTrain.date,
+      depTime:    ktxTrain.depTime,
+      arrTime:    ktxTrain.arrTime,
+      duration:   ktxTrain.duration,
+      seatClass:  ktxTrain.seatClass,
+      car:        ktxTrain.car,
+      seat:       ktxTrain.seat,
+      passengers: ktxTrain.passengers,
+      priceKrw:   ktxTrain.priceKrw,
+      priceUsdc:  ktxTrain.priceUsdc,
+      elapsedMs:  d.elapsedMs,
+      reservedAt: new Date().toLocaleString('ko-KR'),
+      reservationNo: 'KTX-' + Math.random().toString(36).slice(2,8).toUpperCase(),
+    });
     $('ktx-complete-card').style.display = 'block';
     loadAccount();
   } catch (e) {
