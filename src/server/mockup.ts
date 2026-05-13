@@ -369,9 +369,9 @@ export function getMockupHtml(): string {
     .accordion-body  {
       background: var(--card); border: 1px solid var(--line); border-top: none;
       border-radius: 0 0 14px 14px; overflow: hidden;
-      max-height: 0; transition: max-height .3s cubic-bezier(.2,.8,.2,1);
+      max-height: 0; transition: max-height .4s cubic-bezier(.2,.8,.2,1);
     }
-    .accordion-body.open { max-height: 700px; }
+    .accordion-body.open { max-height: 2000px; }
     .accordion-inner { padding: 14px 14px 16px; }
 
     /* ── KTX Card ───────────────────────────────────── */
@@ -1691,6 +1691,11 @@ async function runKtxReserve() {
     });
     $('ktx-complete-card').style.display = 'block';
     loadAccount();
+    // 완료 카드(+버튼)까지 스크롤
+    setTimeout(function() {
+      var card = $('ktx-complete-card');
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
   } catch (e) {
     $('ktx-d2').classList.remove('active');
     $('ktx-s2').classList.remove('active');
