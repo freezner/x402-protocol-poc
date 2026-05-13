@@ -1332,7 +1332,7 @@ function toggleAccordion(idx) {
 
 let ktxGreetingPlayed = false;
 function ktxPlayGreeting() {
-  const full = '안녕하세요! KTX 예약을 도와드릴게요.\n어디서 어디로 가실 건가요?';
+  const full = '안녕하세요! KTX 예약을 도와드릴게요.' + String.fromCharCode(10) + '어디서 어디로 가실 건가요?';
   const textEl = $('ktx-greeting-text');
   const cursor = $('ktx-greeting-cursor');
   if (!textEl) return;
@@ -1344,7 +1344,7 @@ function ktxPlayGreeting() {
       return;
     }
     const ch = full[i++];
-    if (ch === '\n') {
+    if (ch === String.fromCharCode(10)) {
       textEl.appendChild(document.createElement('br'));
     } else {
       textEl.appendChild(document.createTextNode(ch));
