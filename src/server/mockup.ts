@@ -1404,10 +1404,11 @@ function ktxSearchErr(msg) {
 }
 
 function ktxMd(text) {
-  // **bold** → <strong>bold</strong>, strip remaining lone *
+  const boldRe = new RegExp('\\*\\*(.+?)\\*\\*', 'g');
+  const italicRe = new RegExp('\\*(.+?)\\*', 'g');
   return text
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '$1')
+    .replace(boldRe, '<strong>$1</strong>')
+    .replace(italicRe, '$1')
     .split(String.fromCharCode(10)).join('<br>');
 }
 function ktxAppendBubble(role, text) {
