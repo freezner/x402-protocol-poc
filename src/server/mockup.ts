@@ -1383,10 +1383,10 @@ function ktxAppendBubble(role, text) {
           '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>' +
           'ClaudeAssist' +
         '</div>' +
-        '<div class="ktx-chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>' +
+        '<div class="ktx-chat-bubble">' + text.split(String.fromCharCode(10)).join('<br>') + '</div>' +
       '</div>';
   } else {
-    row.innerHTML = '<div class="ktx-chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
+    row.innerHTML = '<div class="ktx-chat-bubble">' + text.split(String.fromCharCode(10)).join('<br>') + '</div>';
   }
   log.appendChild(row);
   log.scrollTop = log.scrollHeight;
