@@ -422,6 +422,8 @@ export function getMockupHtml(): string {
     .ktx-chat-send:disabled { opacity: .45; cursor: default; }
     .ktx-chat-send:active:not(:disabled) { opacity: .75; }
     .ktx-chat-log { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 260px; overflow-y: auto; }
+    @keyframes ktxBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+    .ktx-cursor { display: inline-block; font-size: 13px; line-height: 1; color: var(--accent); animation: ktxBlink .7s step-start infinite; margin-left: 1px; }
     .ktx-bubble-row { display: flex; }
     .ktx-bubble-row.user  { justify-content: flex-end; }
     .ktx-bubble-row.agent { justify-content: flex-start; }
@@ -743,7 +745,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
                         ClaudeAssist
                       </div>
-                      <div class="ktx-chat-bubble">안녕하세요! KTX 예약을 도와드릴게요. 어디서 어디로 가실 건가요?</div>
+                      <div class="ktx-chat-bubble" id="ktx-greeting-bubble"><span id="ktx-greeting-text"></span><span class="ktx-cursor" id="ktx-greeting-cursor">▍</span></div>
                     </div>
                   </div>
                 </div>
@@ -1321,6 +1323,35 @@ function toggleAccordion(idx) {
   hd.classList.toggle('open', !isOpen);
   bd.classList.toggle('open', !isOpen);
   cv.classList.toggle('open', !isOpen);
+  // KTX 아코디언(idx=1) 첫 오픈 시 인사말 타이핑 효과
+  if (idx === 1 && !isOpen && !ktxGreetingPlayed) {
+    ktxGreetingPlayed = true;
+    setTimeout(ktxPlayGreeting, 280); // accordion 열리는 애니 후 시작
+  }
+}
+
+let ktxGreetingPlayed = false;
+function ktxPlayGreeting() {
+  const full = '안녕하세요! KTX 예약을 도와드릴게요.\n어디서 어디로 가실 건가요?';
+  const textEl = $('ktx-greeting-text');
+  const cursor = $('ktx-greeting-cursor');
+  if (!textEl) return;
+  let i = 0;
+  const tick = setInterval(function() {
+    if (i >= full.length) {
+      clearInterval(tick);
+      cursor.style.display = 'none';
+      return;
+    }
+    const ch = full[i++];
+    if (ch === '\n') {
+      textEl.appendChild(document.createElement('br'));
+    } else {
+      textEl.appendChild(document.createTextNode(ch));
+    }
+    const log = $('ktx-chat-log');
+    log.scrollTop = log.scrollHeight;
+  }, 35);
 }
 
 /* ── M2: Micropayment ─────────────────────────────── */
