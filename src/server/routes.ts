@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import { Router } from "express";
 import type {
   PaidRoute,
@@ -1814,21 +1815,72 @@ router.post("/api/demo/m2m-run", async (_req, res) => {
 // KTX 에이전트 예약 (에이전트 결제 데모)
 // ============================================================
 
-router.post("/api/demo/ktx-reserve", async (_req, res) => {
+// KTX 열차 검색 — Claude API로 시뮬레이션
+router.post("/api/demo/ktx-search", async (req, res) => {
+  const { from = "서울", to = "부산", date = "", passengers = 1 } = req.body as {
+    from?: string; to?: string; date?: string; passengers?: number;
+  };
+  try {
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const msg = await anthropic.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 512,
+      messages: [{
+        role: "user",
+        content: `당신은 코레일 KTX 예약 AI 어시스턴트입니다.
+아래 조건으로 KTX 열차를 검색해 가장 적합한 1편을 추천하세요.
+출발지: ${from}
+도착지: ${to}
+날짜: ${date || "오늘"}
+승객: ${passengers}명
+
+반드시 아래 JSON 형식으로만 응답하세요 (설명 없이):
+{
+  "trainNo": "KTX 101",
+  "depTime": "09:00",
+  "arrTime": "11:40",
+  "duration": "2h 40m",
+  "seatClass": "일반실",
+  "car": "9호차",
+  "seat": "15A",
+  "priceKrw": 59800,
+  "available": true,
+  "note": "직통 특실 대비 30% 저렴"
+}`,
+      }],
+    });
+    const text = (msg.content[0] as { type: string; text: string }).text.trim();
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("Claude 응답 파싱 실패");
+    const train = JSON.parse(jsonMatch[0]);
+    res.json({ ok: true, from, to, date, train });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
+// KTX 예약 결제 — x402 USDC 결제 (실제 코레일 예약 없음)
+router.post("/api/demo/ktx-reserve", async (req, res) => {
+  const { trainNo, from, to, depTime, arrTime, seatClass, car, seat, priceKrw } = req.body as {
+    trainNo?: string; from?: string; to?: string;
+    depTime?: string; arrTime?: string; seatClass?: string;
+    car?: string; seat?: string; priceKrw?: number;
+  };
   try {
     const fetchFn = await getAgentFetch();
     const paid = await callPaidEndpoint(fetchFn, "/api/premium/trip/railgo");
+    const detail = `${trainNo ?? "KTX"} ${from ?? "서울"}→${to ?? "부산"} ${seatClass ?? "일반실"} ${car ?? ""}${seat ? " " + seat : ""}`;
     demoStateStore.addApprovedTransaction({
       kind: "trip",
       merchant: "코레일 (KTX)",
       category: "transport",
-      amountKrw: 59800,
+      amountKrw: priceKrw ?? 59800,
       amountUsdc: "0.01",
       endpoint: "/api/premium/trip/railgo",
       ai: "ClaudeAssist",
-      detail: "KTX 101호 서울→부산 일반실 9호차 15A",
+      detail,
     });
-    res.json({ ok: true, elapsedMs: paid.elapsedMs });
+    res.json({ ok: true, elapsedMs: paid.elapsedMs, detail });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

@@ -20,6 +20,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "@x402/core": "^2.10.0",
     "@x402/evm": "^2.10.0",
     "@x402/express": "^2.10.0",
