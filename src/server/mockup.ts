@@ -1429,12 +1429,12 @@ function renderKtxCard(t) {
     '</div>' +
     '<div class="ktx-price">' +
       '<div class="ktx-price-left">' +
-        '<span class="ktx-krw-label">실제 운임</span>' +
+        '<span class="ktx-krw-label">KRW 운임</span>' +
         '<span class="ktx-krw">₩' + Number(t.priceKrw).toLocaleString('ko-KR') + '</span>' +
       '</div>' +
       '<div class="ktx-price-right">' +
-        '<span class="ktx-usdc-label">데모 결제금액</span>' +
-        '<span class="ktx-usdc">0.01 USDC</span>' +
+        '<span class="ktx-usdc-label">USDC 환산 (₩' + (t.exchangeRate || '—') + '/USD)</span>' +
+        '<span class="ktx-usdc">' + (t.priceUsdc ? Number(t.priceUsdc).toFixed(4) + ' USDC' : '— USDC') + '</span>' +
       '</div>' +
     '</div>';
 }
@@ -1488,10 +1488,11 @@ async function runKtxReserve() {
       ' ' + ktxTrain.depTime + '~' + ktxTrain.arrTime +
       ' · 0.01 USDC · ' + d.elapsedMs + 'ms';
     $('ktx-run').style.display = 'none';
+    const usdcAmt = ktxTrain.priceUsdc ? Number(ktxTrain.priceUsdc).toFixed(4) + ' USDC' : '0.01 USDC';
     $('ktx-complete-detail').innerHTML =
       ktxTrain.trainNo + ' &nbsp;' + ktxTrain.from + ' → ' + ktxTrain.to + '<br>' +
       ktxTrain.depTime + ' ~ ' + ktxTrain.arrTime +
-      ' &nbsp;·&nbsp; 0.01 USDC · ' + d.elapsedMs + 'ms';
+      ' &nbsp;·&nbsp; ' + usdcAmt + ' · ' + d.elapsedMs + 'ms';
     $('ktx-complete-card').style.display = 'block';
     loadAccount();
   } catch (e) {

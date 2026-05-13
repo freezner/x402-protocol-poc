@@ -1834,6 +1834,10 @@ router.post("/api/demo/ktx-search", async (req, res) => {
 날짜: ${date || "오늘"}
 승객: ${passengers}명
 
+priceKrw는 코레일 공식 운임 기준으로 정확하게 산출하세요.
+priceUsdc는 현재 KRW/USD 환율을 적용해 소수점 4자리로 계산하세요 (1 USDC = 1 USD 기준).
+exchangeRate는 계산에 사용한 원/달러 환율(정수)입니다.
+
 반드시 아래 JSON 형식으로만 응답하세요 (설명 없이):
 {
   "trainNo": "KTX 101",
@@ -1844,6 +1848,8 @@ router.post("/api/demo/ktx-search", async (req, res) => {
   "car": "9호차",
   "seat": "15A",
   "priceKrw": 59800,
+  "priceUsdc": "43.3333",
+  "exchangeRate": 1380,
   "available": true,
   "note": "직통 특실 대비 30% 저렴"
 }`,
@@ -1861,10 +1867,10 @@ router.post("/api/demo/ktx-search", async (req, res) => {
 
 // KTX 예약 결제 — x402 USDC 결제 (실제 코레일 예약 없음)
 router.post("/api/demo/ktx-reserve", async (req, res) => {
-  const { trainNo, from, to, depTime, arrTime, seatClass, car, seat, priceKrw } = req.body as {
+  const { trainNo, from, to, depTime, arrTime, seatClass, car, seat, priceKrw, priceUsdc } = req.body as {
     trainNo?: string; from?: string; to?: string;
     depTime?: string; arrTime?: string; seatClass?: string;
-    car?: string; seat?: string; priceKrw?: number;
+    car?: string; seat?: string; priceKrw?: number; priceUsdc?: string;
   };
   try {
     const fetchFn = await getAgentFetch();
@@ -1875,7 +1881,7 @@ router.post("/api/demo/ktx-reserve", async (req, res) => {
       merchant: "코레일 (KTX)",
       category: "transport",
       amountKrw: priceKrw ?? 59800,
-      amountUsdc: "0.01",
+      amountUsdc: priceUsdc ?? "0.01",
       endpoint: "/api/premium/trip/railgo",
       ai: "ClaudeAssist",
       detail,
