@@ -1674,9 +1674,13 @@ router.post("/api/demo/trip", async (_req, res) => {
   }
 });
 
-router.post("/api/demo/micropayment", async (_req, res) => {
+router.post("/api/demo/micropayment", async (req, res) => {
   try {
-    const results = await runPaidScenario(CONTENT_STEPS, "content");
+    const { indices } = req.body as { indices?: number[] };
+    const steps = (indices && indices.length > 0)
+      ? indices.map((i) => CONTENT_STEPS[i]).filter(Boolean)
+      : CONTENT_STEPS;
+    const results = await runPaidScenario(steps as typeof CONTENT_STEPS, "content");
     res.json({
       ok: true,
       steps: results,

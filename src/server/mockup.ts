@@ -345,6 +345,20 @@ export function getMockupHtml(): string {
 
     /* Micropayment list */
     .list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .m2-cb { display:none; }
+    .m2-check {
+      flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px;
+      border: 1.5px solid var(--line); background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .m2-cb:checked + .m2-check { background: var(--accent); border-color: var(--accent); }
+    .m2-cb:checked + .m2-check::after {
+      content: ''; display: block; width: 5px; height: 9px;
+      border: 2px solid #fff; border-top: none; border-left: none;
+      transform: rotate(45deg) translate(-1px,-1px);
+    }
+    .list-item.m2-selected { background: #f0f5ff; border-color: var(--accent); }
     .list-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-size: 13px; transition: all .15s; }
     .list-item.done { border-color: #b9e6cd; background: #f1fff7; }
     .list-item-info { display: flex; flex-direction: column; gap: 3px; }
@@ -701,21 +715,21 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/></svg>
                   초소액 결제
                 </div>
-                <div class="accordion-hd-sub">콘텐츠 구독 · 5건 · 0.025 USDC</div>
+                <div class="accordion-hd-sub">콘텐츠 구독 · 코빗 리서치 · 5건</div>
               </div>
               <svg class="accordion-chevron" id="acc-cv-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="accordion-body" id="acc-bd-0">
               <div class="accordion-inner">
-                <div class="sub" style="margin-bottom:10px">기사당 0.005 USDC · x402 실제 온체인 결제</div>
+                <div class="sub" style="margin-bottom:10px">구독 중인 콘텐츠 건 별 결제</div>
                 <div id="m2-list" class="list">
-                  <div class="list-item"><div class="list-item-info"><span class="list-item-title">AI 금융 인프라의 재편</span><span class="list-item-price">0.005 USDC</span></div><span class="chip">대기</span></div>
-                  <div class="list-item"><div class="list-item-info"><span class="list-item-title">에이전트 결제 UX 트렌드</span><span class="list-item-price">0.005 USDC</span></div><span class="chip">대기</span></div>
-                  <div class="list-item"><div class="list-item-info"><span class="list-item-title">x402와 은행 계좌 구조</span><span class="list-item-price">0.005 USDC</span></div><span class="chip">대기</span></div>
-                  <div class="list-item"><div class="list-item-info"><span class="list-item-title">출장 데이터 자동화</span><span class="list-item-price">0.005 USDC</span></div><span class="chip">대기</span></div>
-                  <div class="list-item"><div class="list-item-info"><span class="list-item-title">마이크로결제 수익성</span><span class="list-item-price">0.005 USDC</span></div><span class="chip">대기</span></div>
+                  <div class="list-item" id="m2-item-0" data-price="0.005" data-idx="0"><input type="checkbox" class="m2-cb" id="m2-cb-0" onchange="updateM2Btn()"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">전통 금융의 블록체인 수익 구조</span><span class="list-item-price">0.005 USDC</span></div><span class="chip" id="m2-chip-0">미결제</span></div>
+                  <div class="list-item" id="m2-item-1" data-price="0.003" data-idx="1"><input type="checkbox" class="m2-cb" id="m2-cb-1" onchange="updateM2Btn()"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">스테이블코인 특화 L1의 부상</span><span class="list-item-price">0.003 USDC</span></div><span class="chip" id="m2-chip-1">미결제</span></div>
+                  <div class="list-item" id="m2-item-2" data-price="0.0045" data-idx="2"><input type="checkbox" class="m2-cb" id="m2-cb-2" onchange="updateM2Btn()"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">코빗 리서치센터 2026년 가상자산 시장 전망</span><span class="list-item-price">0.0045 USDC</span></div><span class="chip" id="m2-chip-2">미결제</span></div>
+                  <div class="list-item" id="m2-item-3" data-price="0.015" data-idx="3"><input type="checkbox" class="m2-cb" id="m2-cb-3" onchange="updateM2Btn()"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">무한 자금 루프: 세일러의 DAT 로드맵</span><span class="list-item-price">0.015 USDC</span></div><span class="chip" id="m2-chip-3">미결제</span></div>
+                  <div class="list-item" id="m2-item-4" data-price="0.0025" data-idx="4"><input type="checkbox" class="m2-cb" id="m2-cb-4" onchange="updateM2Btn()"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">기관 자금 동향: ETF 시장 업데이트</span><span class="list-item-price">0.0025 USDC</span></div><span class="chip" id="m2-chip-4">미결제</span></div>
                 </div>
-                <button class="btn" id="m2-run" onclick="runMicropayment()" style="margin-top:12px">5건 순차 결제 실행</button>
+                <button class="btn" id="m2-run" onclick="runMicropayment()" style="margin-top:12px">전체 결제 실행 (0.030 USDC)</button>
                 <div class="status" id="m2-status"></div>
               </div>
             </div>
@@ -1444,36 +1458,65 @@ function renderKtxHistList() {
 }
 
 /* ── M2: Micropayment ─────────────────────────────── */
+function updateM2Btn() {
+  const allItems  = document.querySelectorAll('#m2-list .list-item');
+  const checkedCbs = document.querySelectorAll('#m2-list .m2-cb:checked');
+  const btn = $('m2-run');
+  let total = 0;
+  if (checkedCbs.length === 0) {
+    allItems.forEach(function(el) { total += parseFloat(el.dataset.price || '0'); });
+    btn.textContent = '전체 결제 실행 (' + total.toFixed(3) + ' USDC)';
+  } else {
+    checkedCbs.forEach(function(cb) {
+      total += parseFloat(cb.closest('.list-item').dataset.price || '0');
+    });
+    btn.textContent = checkedCbs.length + '건 결제 실행 (' + total.toFixed(3) + ' USDC)';
+  }
+}
+
 async function runMicropayment() {
   const btn = $('m2-run');
-  btn.disabled = true; btn.textContent = '결제 진행 중...';
   $('m2-status').className = 'status';
-  const items = document.querySelectorAll('#m2-list .list-item');
-  items.forEach(i => { i.classList.remove('done'); const c = i.querySelector('.chip'); c.textContent = '대기'; c.style.color = ''; });
+  const allItems   = Array.from(document.querySelectorAll('#m2-list .list-item'));
+  const checkedCbs = Array.from(document.querySelectorAll('#m2-list .m2-cb:checked'));
+  const targets = checkedCbs.length > 0
+    ? checkedCbs.map(function(cb) { return cb.closest('.list-item'); })
+    : allItems;
+
+  targets.forEach(function(el) {
+    el.classList.remove('done');
+    const chip = el.querySelector('.chip');
+    chip.textContent = '대기'; chip.style.color = '';
+  });
+  btn.disabled = true; btn.textContent = '결제 진행 중...';
+
+  const indices = targets.map(function(el) { return parseInt(el.dataset.idx); });
 
   try {
-    const res = await fetch('/api/demo/micropayment', { method: 'POST' });
+    const res = await fetch('/api/demo/micropayment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ indices: indices }),
+    });
     const d = await res.json();
     if (!res.ok) throw new Error(d.error);
-    d.steps.forEach((step, i) => {
-      if (items[i]) {
-        items[i].classList.add('done');
-        items[i].querySelector('.chip').textContent = '결제 완료';
-      }
+    d.steps.forEach(function(step, i) {
+      const el = targets[i];
+      if (el) { el.classList.add('done'); el.querySelector('.chip').textContent = '결제 완료'; }
     });
-    const totalUsdc = d.steps.reduce((s, x) => s + parseFloat(x.usdcPrice || '0'), 0);
-    showStatus('m2-status', '5건 결제 완료 · 총 ' + totalUsdc.toFixed(3) + ' USDC', true);
+    const totalUsdc = d.steps.reduce(function(s, x) { return s + parseFloat(x.usdcPrice || '0'); }, 0);
+    showStatus('m2-status', targets.length + '건 결제 완료 · 총 ' + totalUsdc.toFixed(3) + ' USDC', true);
   } catch (e) {
-    // 아직 '대기' 상태인 항목을 '결제 실패'로 표시
-    items.forEach(i => {
-      if (i.querySelector('.chip').textContent === '대기') {
-        i.querySelector('.chip').textContent = '결제 실패';
-        i.querySelector('.chip').style.color = 'var(--danger)';
+    targets.forEach(function(el) {
+      if (el.querySelector('.chip').textContent === '대기') {
+        el.querySelector('.chip').textContent = '결제 실패';
+        el.querySelector('.chip').style.color = 'var(--danger)';
       }
     });
     showStatus('m2-status', '결제 실패: ' + e.message, false);
   } finally {
-    btn.disabled = false; btn.textContent = '5건 순차 결제 실행';
+    btn.disabled = false;
+    updateM2Btn();
   }
 }
 
