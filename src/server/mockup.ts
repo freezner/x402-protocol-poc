@@ -395,9 +395,13 @@ export function getMockupHtml(): string {
     .ktx-dur    { font-size: 10px; color: rgba(255,255,255,.6); }
     .ktx-info   { display: flex; gap: 8px; flex-wrap: wrap; }
     .ktx-tag    { font-size: 10px; color: rgba(255,255,255,.65); background: rgba(255,255,255,.1); padding: 3px 8px; border-radius: 999px; }
-    .ktx-price  { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); display: flex; justify-content: space-between; align-items: baseline; }
-    .ktx-krw    { font-size: 11px; color: rgba(255,255,255,.55); text-decoration: line-through; }
-    .ktx-usdc   { font-size: 18px; font-weight: 700; }
+    .ktx-price     { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.15); display: flex; justify-content: space-between; align-items: flex-end; }
+    .ktx-price-left { display: flex; flex-direction: column; gap: 2px; }
+    .ktx-krw       { font-size: 15px; font-weight: 700; color: #fff; }
+    .ktx-krw-label { font-size: 10px; color: rgba(255,255,255,.5); }
+    .ktx-price-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+    .ktx-usdc      { font-size: 15px; font-weight: 700; color: rgba(255,255,255,.9); }
+    .ktx-usdc-label { font-size: 10px; color: rgba(255,255,255,.45); }
 
     /* KTX 에이전트 스텝 진행 */
     .ktx-steps  { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
@@ -732,12 +736,6 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                 <!-- 검색 결과 + 결제 영역 -->
                 <div id="ktx-result-area" style="display:none;margin-top:4px">
 
-                  <!-- 결과 레이블 -->
-                  <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
-                    ClaudeAssist 추천 열차
-                  </div>
-
                   <!-- 동적 KTX 카드 -->
                   <div class="ktx-card" id="ktx-card-dynamic"></div>
 
@@ -756,7 +754,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
 
                   <!-- 결제 버튼 -->
                   <button class="btn" id="ktx-run" onclick="runKtxReserve()">
-                    🤖 에이전트 결제 · 예약 확정
+                    결제 · 예약 확정
                   </button>
 
                   <!-- 결제 오류만 표시 -->
@@ -1430,8 +1428,14 @@ function renderKtxCard(t) {
       (t.note ? '<span class="ktx-tag">' + t.note + '</span>' : '') +
     '</div>' +
     '<div class="ktx-price">' +
-      '<span class="ktx-krw">₩' + Number(t.priceKrw).toLocaleString('ko-KR') + '</span>' +
-      '<span class="ktx-usdc">0.01 USDC</span>' +
+      '<div class="ktx-price-left">' +
+        '<span class="ktx-krw-label">실제 운임</span>' +
+        '<span class="ktx-krw">₩' + Number(t.priceKrw).toLocaleString('ko-KR') + '</span>' +
+      '</div>' +
+      '<div class="ktx-price-right">' +
+        '<span class="ktx-usdc-label">데모 결제금액</span>' +
+        '<span class="ktx-usdc">0.01 USDC</span>' +
+      '</div>' +
     '</div>';
 }
 
