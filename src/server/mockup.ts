@@ -533,7 +533,7 @@ export function getMockupHtml(): string {
   </style>
 </head>
 <body>
-${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0;user-select:none" draggable="false" aria-hidden="true">` : ""}
+${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:-120px;right:-120px;width:600px;height:600px;object-fit:contain;opacity:0.07;pointer-events:none;z-index:0;user-select:none;filter:blur(18px)" draggable="false" aria-hidden="true">` : ""}
 <div class="device-wrap">
 <div class="device">
 
