@@ -1817,29 +1817,36 @@ router.post("/api/demo/m2m-run", async (_req, res) => {
 
 // KTX 열차 검색 — Claude API로 시뮬레이션
 router.post("/api/demo/ktx-search", async (req, res) => {
-  const { from = "서울", to = "부산", date = "", passengers = 1 } = req.body as {
-    from?: string; to?: string; date?: string; passengers?: number;
-  };
+  const { query = "" } = req.body as { query?: string };
+  const today = new Date().toISOString().slice(0, 10);
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const msg = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 512,
+      max_tokens: 600,
       messages: [{
         role: "user",
         content: `당신은 코레일 KTX 예약 AI 어시스턴트입니다.
-아래 조건으로 KTX 열차를 검색해 가장 적합한 1편을 추천하세요.
-출발지: ${from}
-도착지: ${to}
-날짜: ${date || "오늘"}
-승객: ${passengers}명
+오늘 날짜: ${today}
 
-priceKrw는 코레일 공식 운임 기준으로 정확하게 산출하세요.
-priceUsdc는 현재 KRW/USD 환율을 적용해 소수점 4자리로 계산하세요 (1 USDC = 1 USD 기준).
+사용자의 자연어 요청을 분석해 최적의 KTX 열차 1편을 추천하세요.
+출발지·도착지가 명시되지 않으면 서울→부산으로 가정하세요.
+날짜가 명시되지 않으면 오늘로 가정하세요.
+인원이 명시되지 않으면 1명으로 가정하세요.
+
+사용자 요청: "${query}"
+
+priceKrw는 코레일 공식 운임(원) 기준으로 산출하세요.
+priceUsdc는 현재 KRW/USD 환율 기준 소수점 4자리로 계산하세요 (1 USDC = 1 USD).
 exchangeRate는 계산에 사용한 원/달러 환율(정수)입니다.
+parsedFrom·parsedTo·parsedDate·parsedPassengers는 요청에서 파악한 값입니다.
 
 반드시 아래 JSON 형식으로만 응답하세요 (설명 없이):
 {
+  "parsedFrom": "서울",
+  "parsedTo": "부산",
+  "parsedDate": "2026-05-21",
+  "parsedPassengers": 1,
   "trainNo": "KTX 101",
   "depTime": "09:00",
   "arrTime": "11:40",
@@ -1859,7 +1866,7 @@ exchangeRate는 계산에 사용한 원/달러 환율(정수)입니다.
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Claude 응답 파싱 실패");
     const train = JSON.parse(jsonMatch[0]);
-    res.json({ ok: true, from, to, date, train });
+    res.json({ ok: true, query, train });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

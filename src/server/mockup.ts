@@ -403,6 +403,30 @@ export function getMockupHtml(): string {
     .ktx-usdc      { font-size: 15px; font-weight: 700; color: rgba(255,255,255,.9); }
     .ktx-usdc-label { font-size: 10px; color: rgba(255,255,255,.45); }
 
+    /* KTX 채팅 검색 */
+    .ktx-chat-wrap  { display: flex; gap: 8px; align-items: flex-end; }
+    .ktx-chat-input {
+      flex: 1; border: 1.5px solid var(--line); border-radius: 20px;
+      padding: 10px 14px; font-size: 13px; font-family: inherit;
+      background: var(--surface); color: var(--text); resize: none;
+      outline: none; line-height: 1.4; max-height: 80px; overflow-y: auto;
+      transition: border-color .2s;
+    }
+    .ktx-chat-input:focus { border-color: var(--accent); }
+    .ktx-chat-input::placeholder { color: var(--muted); }
+    .ktx-chat-send {
+      width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer;
+      background: var(--accent); color: #fff; flex-shrink: 0;
+      display: grid; place-items: center; transition: opacity .15s;
+    }
+    .ktx-chat-send:disabled { opacity: .45; cursor: default; }
+    .ktx-chat-send:active:not(:disabled) { opacity: .75; }
+    .ktx-chat-bubble {
+      display: inline-block; background: var(--accent); color: #fff;
+      font-size: 12px; padding: 7px 12px; border-radius: 14px 14px 4px 14px;
+      margin-bottom: 10px; max-width: 100%; word-break: break-word; line-height: 1.4;
+    }
+
     /* KTX 에이전트 스텝 진행 */
     .ktx-steps  { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
     .ktx-step   { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
@@ -704,37 +728,37 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <div class="accordion-body" id="acc-bd-1">
               <div class="accordion-inner">
 
-                <!-- 검색 입력폼 -->
+                <!-- 자연어 채팅 검색 -->
                 <div id="ktx-search-form">
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-                    <div>
-                      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">출발지</div>
-                      <input id="ktx-from" class="setting-input" value="서울" placeholder="출발지" style="width:100%;font-size:13px">
-                    </div>
-                    <div>
-                      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">도착지</div>
-                      <input id="ktx-to" class="setting-input" value="부산" placeholder="도착지" style="width:100%;font-size:13px">
-                    </div>
+                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
+                    🤖 <strong>ClaudeAssist</strong>에게 자연어로 요청하세요
                   </div>
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-                    <div>
-                      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">날짜</div>
-                      <input id="ktx-date" class="setting-input" type="date" style="width:100%;font-size:13px">
-                    </div>
-                    <div>
-                      <div style="font-size:10px;color:var(--muted);margin-bottom:4px">인원</div>
-                      <input id="ktx-pax" class="setting-input" type="number" value="1" min="1" max="9" style="width:100%;font-size:13px">
-                    </div>
+                  <div class="ktx-chat-wrap">
+                    <textarea id="ktx-query" class="ktx-chat-input" rows="1"
+                      placeholder="예) 서울에서 부산 내일 오전 2명"
+                      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runKtxSearch()}"
+                      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+                    ></textarea>
+                    <button class="ktx-chat-send" id="ktx-search-btn" onclick="runKtxSearch()">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
                   </div>
-                  <button class="btn" id="ktx-search-btn" onclick="runKtxSearch()" style="margin-top:0">
-                    🔍 ClaudeAssist로 열차 검색
-                  </button>
-                  <!-- 검색 오류만 표시, 성공 시 숨김 -->
                   <div id="ktx-search-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
                 </div>
 
                 <!-- 검색 결과 + 결제 영역 -->
-                <div id="ktx-result-area" style="display:none;margin-top:4px">
+                <div id="ktx-result-area" style="display:none;margin-top:12px">
+
+                  <!-- 사용자 입력 버블 -->
+                  <div style="text-align:right;margin-bottom:10px">
+                    <span class="ktx-chat-bubble" id="ktx-query-bubble"></span>
+                  </div>
+
+                  <!-- ClaudeAssist 레이블 -->
+                  <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
+                    ClaudeAssist 추천 열차
+                  </div>
 
                   <!-- 동적 KTX 카드 -->
                   <div class="ktx-card" id="ktx-card-dynamic"></div>
@@ -1342,15 +1366,6 @@ async function runMicropayment() {
 }
 
 /* ── KTX: 날짜 input 초기값 오늘+7일 ───────────────── */
-(function initKtxDate() {
-  const d = new Date(); d.setDate(d.getDate() + 7);
-  const iso = d.toISOString().slice(0, 10);
-  document.addEventListener('DOMContentLoaded', () => {
-    const el = $('ktx-date');
-    if (el) el.value = iso;
-  });
-})();
-
 /* ── KTX 열차 검색 (Claude API) ─────────────────────── */
 let ktxTrain = null;
 
@@ -1367,26 +1382,29 @@ function ktxPayErr(msg) {
 
 async function runKtxSearch() {
   const btn = $('ktx-search-btn');
-  const from = $('ktx-from').value.trim() || '서울';
-  const to   = $('ktx-to').value.trim()   || '부산';
-  const date = $('ktx-date').value;
-  const passengers = parseInt($('ktx-pax').value) || 1;
+  const query = $('ktx-query').value.trim();
+  if (!query) { $('ktx-query').focus(); return; }
 
   btn.disabled = true;
-  btn.textContent = 'ClaudeAssist 검색 중...';
   ktxSearchErr('');
 
   try {
     const res = await fetch('/api/demo/ktx-search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from, to, date, passengers }),
+      body: JSON.stringify({ query }),
     });
     const d = await res.json();
     if (!res.ok) throw new Error(d.error);
 
-    ktxTrain = { ...d.train, from, to, date, passengers };
+    ktxTrain = { ...d.train,
+      from: d.train.parsedFrom, to: d.train.parsedTo,
+      date: d.train.parsedDate, passengers: d.train.parsedPassengers,
+    };
     renderKtxCard(ktxTrain);
+
+    // 사용자 버블 표시
+    $('ktx-query-bubble').textContent = query;
 
     // 결과 영역 초기화 후 표시
     $('ktx-steps').style.display = 'none';
@@ -1405,7 +1423,6 @@ async function runKtxSearch() {
     ktxSearchErr(e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '🔍 ClaudeAssist로 열차 검색';
   }
 }
 
@@ -1500,7 +1517,7 @@ async function runKtxReserve() {
     $('ktx-s2').classList.remove('active');
     ktxPayErr(e.message);
     btn.disabled = false;
-    btn.textContent = '🤖 에이전트 결제 · 예약 확정';
+    btn.textContent = '결제 · 예약 확정';
   }
 }
 
