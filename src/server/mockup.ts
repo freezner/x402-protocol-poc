@@ -1,3 +1,17 @@
+import { readFileSync } from "fs";
+import { join } from "path";
+
+const JBBANK_LOGO_B64 = (() => {
+  try {
+    return readFileSync(join(process.cwd(), "plan/JBBANK_CI.png")).toString("base64");
+  } catch {
+    return "";
+  }
+})();
+const JBBANK_LOGO_SRC = JBBANK_LOGO_B64
+  ? `data:image/png;base64,${JBBANK_LOGO_B64}`
+  : "";
+
 export function getMockupHtml(): string {
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -417,7 +431,8 @@ export function getMockupHtml(): string {
 
     /* Intro screen */
     .hero-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 16px; padding: 40px 28px; background: linear-gradient(180deg, #eef4fb 0%, #f7fafc 100%); }
-    .logo    { width: 76px; height: 76px; border-radius: 24px; background: var(--primary); color: #fff; display: grid; place-items: center; font-size: 28px; font-weight: 700; box-shadow: 0 8px 24px rgba(0,61,130,.25); }
+    .logo    { width: 76px; height: 76px; border-radius: 24px; background: #fff; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,61,130,.25); overflow: hidden; }
+    .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
     .hero-screen h1 { font-size: 27px; line-height: 1.22; font-weight: 700; }
     .hero-screen p  { font-size: 14px; color: var(--muted); max-width: 260px; line-height: 1.6; }
@@ -518,6 +533,7 @@ export function getMockupHtml(): string {
   </style>
 </head>
 <body>
+${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:340px;height:340px;object-fit:contain;opacity:0.04;pointer-events:none;z-index:0;user-select:none" draggable="false" aria-hidden="true">` : ""}
 <div class="device-wrap">
 <div class="device">
 
@@ -567,7 +583,7 @@ export function getMockupHtml(): string {
       <!-- M0 · Intro -->
       <div class="screen active" id="M0">
         <div class="hero-screen">
-          <div class="logo">JB</div>
+          <div class="logo">${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" alt="JB Bank">` : "JB"}</div>
           <div class="eyebrow">x402 Protocol Demo</div>
           <h1>디지털자산 지갑</h1>
           <p>x402 프로토콜 기반 Base USDC(Sepolia) 결제 연동</p>
