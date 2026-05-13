@@ -1817,56 +1817,46 @@ router.post("/api/demo/m2m-run", async (_req, res) => {
 
 // KTX 열차 검색 — Claude API로 시뮬레이션
 router.post("/api/demo/ktx-search", async (req, res) => {
-  const { query = "" } = req.body as { query?: string };
+  const { messages = [] } = req.body as {
+    messages: Array<{ role: "user" | "assistant"; content: string }>;
+  };
   const today = new Date().toISOString().slice(0, 10);
+
+  const SYSTEM = `당신은 코레일 KTX 예약 AI 어시스턴트 ClaudeAssist입니다.
+오늘 날짜: ${today}
+
+[목표] 아래 5가지 정보를 대화로 수집한 뒤 열차를 추천합니다.
+  1. 출발지
+  2. 도착지
+  3. 출발 일자 (YYYY-MM-DD)
+  4. 출발 시각대 (예: 오전 / 오후 / 저녁 / 특정 시각)
+  5. 인원 수
+
+[규칙]
+- 아직 파악하지 못한 항목이 있으면 자연스럽고 친절하게 하나씩 질문하세요.
+- 한 번에 여러 항목을 묻지 마세요.
+- 모든 항목이 확보되면 아래 JSON을 **코드블록 없이 그대로** 반환하세요. 다른 설명은 절대 추가하지 마세요.
+
+{"parsedFrom":"서울","parsedTo":"부산","parsedDate":"2026-05-21","parsedDepTime":"오전","parsedPassengers":1,"trainNo":"KTX 101","depTime":"09:00","arrTime":"11:40","duration":"2h 40m","seatClass":"일반실","car":"9호차","seat":"15A","priceKrw":59800,"priceUsdc":"43.3333","exchangeRate":1380,"available":true,"note":"직통 운행"}`;
+
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const msg = await anthropic.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 600,
-      messages: [{
-        role: "user",
-        content: `당신은 코레일 KTX 예약 AI 어시스턴트입니다.
-오늘 날짜: ${today}
-
-사용자의 자연어 요청을 분석해 최적의 KTX 열차 1편을 추천하세요.
-출발지·도착지가 명시되지 않으면 서울→부산으로 가정하세요.
-날짜가 명시되지 않으면 오늘로 가정하세요.
-인원이 명시되지 않으면 1명으로 가정하세요.
-
-사용자 요청: "${query}"
-
-priceKrw는 코레일 공식 운임(원) 기준으로 산출하세요.
-priceUsdc는 현재 KRW/USD 환율 기준 소수점 4자리로 계산하세요 (1 USDC = 1 USD).
-exchangeRate는 계산에 사용한 원/달러 환율(정수)입니다.
-parsedFrom·parsedTo·parsedDate·parsedPassengers는 요청에서 파악한 값입니다.
-
-반드시 아래 JSON 형식으로만 응답하세요 (설명 없이):
-{
-  "parsedFrom": "서울",
-  "parsedTo": "부산",
-  "parsedDate": "2026-05-21",
-  "parsedPassengers": 1,
-  "trainNo": "KTX 101",
-  "depTime": "09:00",
-  "arrTime": "11:40",
-  "duration": "2h 40m",
-  "seatClass": "일반실",
-  "car": "9호차",
-  "seat": "15A",
-  "priceKrw": 59800,
-  "priceUsdc": "43.3333",
-  "exchangeRate": 1380,
-  "available": true,
-  "note": "직통 특실 대비 30% 저렴"
-}`,
-      }],
+      max_tokens: 512,
+      system: SYSTEM,
+      messages,
     });
     const text = (msg.content[0] as { type: string; text: string }).text.trim();
+
+    // JSON이면 열차 결과, 아니면 추가 질문
     const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("Claude 응답 파싱 실패");
-    const train = JSON.parse(jsonMatch[0]);
-    res.json({ ok: true, query, train });
+    if (jsonMatch) {
+      const train = JSON.parse(jsonMatch[0]);
+      res.json({ ok: true, type: "result", train, assistantMessage: text });
+    } else {
+      res.json({ ok: true, type: "question", message: text });
+    }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

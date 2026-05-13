@@ -421,11 +421,17 @@ export function getMockupHtml(): string {
     }
     .ktx-chat-send:disabled { opacity: .45; cursor: default; }
     .ktx-chat-send:active:not(:disabled) { opacity: .75; }
+    .ktx-chat-log { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; max-height: 260px; overflow-y: auto; }
+    .ktx-bubble-row { display: flex; }
+    .ktx-bubble-row.user  { justify-content: flex-end; }
+    .ktx-bubble-row.agent { justify-content: flex-start; }
     .ktx-chat-bubble {
-      display: inline-block; background: var(--accent); color: #fff;
-      font-size: 12px; padding: 7px 12px; border-radius: 14px 14px 4px 14px;
-      margin-bottom: 10px; max-width: 100%; word-break: break-word; line-height: 1.4;
+      font-size: 12px; padding: 8px 12px; border-radius: 16px;
+      max-width: 85%; word-break: break-word; line-height: 1.5;
     }
+    .ktx-bubble-row.user  .ktx-chat-bubble { background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+    .ktx-bubble-row.agent .ktx-chat-bubble { background: #eef4ff; color: var(--text); border-bottom-left-radius: 4px; }
+    .ktx-agent-label { font-size: 10px; color: var(--muted); margin-bottom: 3px; display: flex; align-items: center; gap: 4px; }
 
     /* KTX 에이전트 스텝 진행 */
     .ktx-steps  { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
@@ -728,70 +734,56 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <div class="accordion-body" id="acc-bd-1">
               <div class="accordion-inner">
 
-                <!-- 자연어 채팅 검색 -->
-                <div id="ktx-search-form">
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px">
-                    🤖 <strong>ClaudeAssist</strong>에게 자연어로 요청하세요
+
+                <!-- 채팅 로그 -->
+                <div class="ktx-chat-log" id="ktx-chat-log">
+                  <div class="ktx-bubble-row agent">
+                    <div>
+                      <div class="ktx-agent-label">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
+                        ClaudeAssist
+                      </div>
+                      <div class="ktx-chat-bubble">안녕하세요! KTX 예약을 도와드릴게요. 어디서 어디로 가실 건가요?</div>
+                    </div>
                   </div>
-                  <div class="ktx-chat-wrap">
-                    <textarea id="ktx-query" class="ktx-chat-input" rows="1"
-                      placeholder="예) 서울에서 부산 내일 오전 2명"
-                      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runKtxSearch()}"
-                      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
-                    ></textarea>
-                    <button class="ktx-chat-send" id="ktx-search-btn" onclick="runKtxSearch()">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </button>
-                  </div>
-                  <div id="ktx-search-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
                 </div>
 
-                <!-- 검색 결과 + 결제 영역 -->
-                <div id="ktx-result-area" style="display:none;margin-top:12px">
-
-                  <!-- 사용자 입력 버블 -->
-                  <div style="text-align:right;margin-bottom:10px">
-                    <span class="ktx-chat-bubble" id="ktx-query-bubble"></span>
-                  </div>
-
-                  <!-- ClaudeAssist 레이블 -->
-                  <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
-                    ClaudeAssist 추천 열차
-                  </div>
-
-                  <!-- 동적 KTX 카드 -->
-                  <div class="ktx-card" id="ktx-card-dynamic"></div>
-
-                  <!-- 데모 안내 -->
-                  <div style="font-size:10px;color:var(--muted);margin:6px 0 14px;opacity:.7">
+                <!-- 열차 결과 카드 (검색 완료 후 표시) -->
+                <div id="ktx-result-area" style="display:none;margin-bottom:12px">
+                  <div style="font-size:10px;color:var(--muted);margin-bottom:6px;opacity:.7">
                     ※ 코레일 API 미연동 — USDC 결제 완료 시 예약 확정 처리
                   </div>
-
-                  <!-- 결제 진행 스텝 (결제 시작 후 표시) -->
-                  <div class="ktx-steps" id="ktx-steps" style="display:none;margin-bottom:12px">
+                  <div class="ktx-card" id="ktx-card-dynamic"></div>
+                  <div class="ktx-steps" id="ktx-steps" style="display:none;margin:10px 0">
                     <div class="ktx-step" id="ktx-s0"><div class="ktx-step-dot" id="ktx-d0">1</div><span>열차 정보 확인</span></div>
                     <div class="ktx-step" id="ktx-s1"><div class="ktx-step-dot" id="ktx-d1">2</div><span>좌석 가용 확인</span></div>
                     <div class="ktx-step" id="ktx-s2"><div class="ktx-step-dot" id="ktx-d2">3</div><span>x402 USDC 결제</span></div>
                     <div class="ktx-step" id="ktx-s3"><div class="ktx-step-dot" id="ktx-d3">4</div><span>예약 완료</span></div>
                   </div>
-
-                  <!-- 결제 버튼 -->
-                  <button class="btn" id="ktx-run" onclick="runKtxReserve()">
-                    결제 · 예약 확정
+                  <button class="btn" id="ktx-run" onclick="runKtxReserve()" style="margin-top:8px">
+                    🤖 에이전트 결제 · 예약 확정
                   </button>
-
-                  <!-- 결제 오류만 표시 -->
                   <div id="ktx-pay-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
-
-                  <!-- 예약 완료 카드 -->
-                  <div id="ktx-complete-card" style="display:none;margin-top:14px;background:#f0faf5;border:1px solid #c2efd1;border-radius:14px;padding:16px;text-align:center">
+                  <div id="ktx-complete-card" style="display:none;margin-top:12px;background:#f0faf5;border:1px solid #c2efd1;border-radius:14px;padding:16px;text-align:center">
                     <div style="font-size:26px;margin-bottom:6px">🎫</div>
                     <div style="font-size:15px;font-weight:700;color:#0f6a3e;margin-bottom:6px">예약 완료</div>
                     <div id="ktx-complete-detail" style="font-size:12px;color:var(--muted);line-height:1.6"></div>
                     <div style="font-size:10px;color:var(--muted);margin-top:8px;opacity:.7">코레일 예약번호는 실제 API 연동 시 발급됩니다</div>
                   </div>
                 </div>
+
+                <!-- 입력창 -->
+                <div class="ktx-chat-wrap">
+                  <textarea id="ktx-query" class="ktx-chat-input" rows="1"
+                    placeholder="메시지를 입력하세요"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runKtxSearch()}"
+                    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
+                  ></textarea>
+                  <button class="ktx-chat-send" id="ktx-search-btn" onclick="runKtxSearch()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                  </button>
+                </div>
+                <div id="ktx-search-err" style="display:none;font-size:12px;color:var(--danger);margin-top:6px;padding:0 2px"></div>
 
               </div>
             </div>
@@ -1365,64 +1357,106 @@ async function runMicropayment() {
   }
 }
 
-/* ── KTX: 날짜 input 초기값 오늘+7일 ───────────────── */
-/* ── KTX 열차 검색 (Claude API) ─────────────────────── */
+/* ── KTX 멀티턴 에이전트 챗 ────────────────────────── */
 let ktxTrain = null;
+let ktxMessages = [];  // {role, content} — Claude API 히스토리
 
-function ktxSearchErr(msg) {
-  const el = $('ktx-search-err');
-  el.textContent = msg ? '⚠ ' + msg : '';
-  el.style.display = msg ? 'block' : 'none';
-}
 function ktxPayErr(msg) {
   const el = $('ktx-pay-err');
   el.textContent = msg ? '⚠ ' + msg : '';
   el.style.display = msg ? 'block' : 'none';
 }
+function ktxSearchErr(msg) {
+  const el = $('ktx-search-err');
+  el.textContent = msg ? '⚠ ' + msg : '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
+function ktxAppendBubble(role, text) {
+  const log = $('ktx-chat-log');
+  const row = document.createElement('div');
+  row.className = 'ktx-bubble-row ' + role;
+  if (role === 'agent') {
+    row.innerHTML =
+      '<div>' +
+        '<div class="ktx-agent-label">' +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>' +
+          'ClaudeAssist' +
+        '</div>' +
+        '<div class="ktx-chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>' +
+      '</div>';
+  } else {
+    row.innerHTML = '<div class="ktx-chat-bubble">' + text.replace(/\n/g, '<br>') + '</div>';
+  }
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+}
 
 async function runKtxSearch() {
   const btn = $('ktx-search-btn');
-  const query = $('ktx-query').value.trim();
-  if (!query) { $('ktx-query').focus(); return; }
+  const textarea = $('ktx-query');
+  const userText = textarea.value.trim();
+  if (!userText) { textarea.focus(); return; }
 
+  // 사용자 버블 추가 & 히스토리 업데이트
+  ktxAppendBubble('user', userText);
+  ktxMessages.push({ role: 'user', content: userText });
+  textarea.value = '';
+  textarea.style.height = 'auto';
   btn.disabled = true;
   ktxSearchErr('');
+
+  // 로딩 버블
+  const loadingRow = document.createElement('div');
+  loadingRow.className = 'ktx-bubble-row agent';
+  loadingRow.id = 'ktx-loading';
+  loadingRow.innerHTML = '<div><div class="ktx-agent-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>ClaudeAssist</div><div class="ktx-chat-bubble" style="color:var(--muted)">···</div></div>';
+  $('ktx-chat-log').appendChild(loadingRow);
+  $('ktx-chat-log').scrollTop = $('ktx-chat-log').scrollHeight;
 
   try {
     const res = await fetch('/api/demo/ktx-search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ messages: ktxMessages }),
     });
     const d = await res.json();
+    loadingRow.remove();
     if (!res.ok) throw new Error(d.error);
 
-    ktxTrain = { ...d.train,
-      from: d.train.parsedFrom, to: d.train.parsedTo,
-      date: d.train.parsedDate, passengers: d.train.parsedPassengers,
-    };
-    renderKtxCard(ktxTrain);
+    if (d.type === 'question') {
+      // 추가 질문 — 버블로 표시 후 대기
+      ktxMessages.push({ role: 'assistant', content: d.message });
+      ktxAppendBubble('agent', d.message);
 
-    // 사용자 버블 표시
-    $('ktx-query-bubble').textContent = query;
+    } else {
+      // 열차 추천 — 카드 표시
+      ktxMessages.push({ role: 'assistant', content: d.assistantMessage || '' });
+      ktxAppendBubble('agent', '추천 열차를 찾았습니다. 아래에서 결제하실 수 있어요.');
 
-    // 결과 영역 초기화 후 표시
-    $('ktx-steps').style.display = 'none';
-    $('ktx-complete-card').style.display = 'none';
-    $('ktx-run').style.display = '';
-    $('ktx-run').disabled = false;
-    $('ktx-run').textContent = '🤖 에이전트 결제 · 예약 확정';
-    ktxPayErr('');
-    for (let i = 0; i < 4; i++) {
-      $('ktx-d' + i).className = 'ktx-step-dot';
-      $('ktx-d' + i).textContent = i + 1;
-      $('ktx-s' + i).className = 'ktx-step';
+      ktxTrain = { ...d.train,
+        from: d.train.parsedFrom, to: d.train.parsedTo,
+        date: d.train.parsedDate, passengers: d.train.parsedPassengers,
+      };
+      renderKtxCard(ktxTrain);
+      $('ktx-steps').style.display = 'none';
+      $('ktx-complete-card').style.display = 'none';
+      $('ktx-run').style.display = '';
+      $('ktx-run').disabled = false;
+      ktxPayErr('');
+      for (let i = 0; i < 4; i++) {
+        $('ktx-d' + i).className = 'ktx-step-dot';
+        $('ktx-d' + i).textContent = i + 1;
+        $('ktx-s' + i).className = 'ktx-step';
+      }
+      $('ktx-result-area').style.display = 'block';
     }
-    $('ktx-result-area').style.display = 'block';
   } catch (e) {
+    loadingRow.remove();
     ktxSearchErr(e.message);
   } finally {
     btn.disabled = false;
+    textarea.focus();
   }
 }
 
