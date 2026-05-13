@@ -22,8 +22,8 @@ export function getMockupHtml(): string {
   <style>
     /* ── Reset & Page ─────────────────────────────────── */
     :root {
-      --primary: #003d82;
-      --accent:  #0066ff;
+      --primary: #004898;
+      --accent:  #004898;
       --success: #00a85a;
       --danger:  #e03131;
       --surface: #f5f7fa;
@@ -275,7 +275,7 @@ export function getMockupHtml(): string {
 
     /* Cards */
     .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 12px; }
-    .card.primary { background: linear-gradient(160deg, var(--primary) 0%, #0a59b5 100%); color: #fff; border: none; }
+    .card.primary { background: linear-gradient(160deg, var(--primary) 0%, #0060c0 100%); color: #fff; border: none; }
     .lbl  { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
     .card.primary .lbl { color: rgba(255,255,255,.72); }
     .amount { font-size: 30px; font-weight: 700; margin: 4px 0 8px; letter-spacing: -0.5px; }
@@ -431,7 +431,7 @@ export function getMockupHtml(): string {
 
     /* Intro screen */
     .hero-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 16px; padding: 40px 28px; background: linear-gradient(180deg, #eef4fb 0%, #f7fafc 100%); }
-    .logo    { width: 76px; height: 76px; border-radius: 24px; background: #fff; display: grid; place-items: center; box-shadow: 0 8px 24px rgba(0,61,130,.25); overflow: hidden; }
+    .logo    { width: 76px; height: 76px; display: grid; place-items: center; overflow: hidden; }
     .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .eyebrow { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
     .hero-screen h1 { font-size: 27px; line-height: 1.22; font-weight: 700; }
@@ -488,7 +488,7 @@ export function getMockupHtml(): string {
     }
     .agent-avatar {
       width: 44px; height: 44px; border-radius: 14px;
-      background: linear-gradient(135deg, var(--primary) 0%, #0a59b5 100%);
+      background: linear-gradient(135deg, var(--primary) 0%, #0060c0 100%);
       display: grid; place-items: center; flex-shrink: 0;
       font-size: 13px; font-weight: 800; color: #fff; letter-spacing: -.5px;
     }
