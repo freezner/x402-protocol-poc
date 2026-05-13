@@ -776,7 +776,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                 <div class="ktx-chat-wrap">
                   <textarea id="ktx-query" class="ktx-chat-input" rows="1"
                     placeholder="메시지를 입력하세요"
-                    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();runKtxSearch()}"
+                    onkeydown="if(event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();runKtxSearch()}"
                     oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"
                   ></textarea>
                   <button class="ktx-chat-send" id="ktx-search-btn" onclick="runKtxSearch()">
@@ -1372,6 +1372,13 @@ function ktxSearchErr(msg) {
   el.style.display = msg ? 'block' : 'none';
 }
 
+function ktxMd(text) {
+  // **bold** → <strong>bold</strong>, strip remaining lone *
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '$1')
+    .split(String.fromCharCode(10)).join('<br>');
+}
 function ktxAppendBubble(role, text) {
   const log = $('ktx-chat-log');
   const row = document.createElement('div');
@@ -1383,10 +1390,10 @@ function ktxAppendBubble(role, text) {
           '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>' +
           'ClaudeAssist' +
         '</div>' +
-        '<div class="ktx-chat-bubble">' + text.split(String.fromCharCode(10)).join('<br>') + '</div>' +
+        '<div class="ktx-chat-bubble">' + ktxMd(text) + '</div>' +
       '</div>';
   } else {
-    row.innerHTML = '<div class="ktx-chat-bubble">' + text.split(String.fromCharCode(10)).join('<br>') + '</div>';
+    row.innerHTML = '<div class="ktx-chat-bubble">' + ktxMd(text) + '</div>';
   }
   log.appendChild(row);
   log.scrollTop = log.scrollHeight;
