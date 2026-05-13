@@ -1564,10 +1564,23 @@ async function runKtxSearch() {
       ktxMessages.push({ role: 'assistant', content: d.assistantMessage || '' });
       ktxAppendBubble('agent', '추천 열차를 찾았습니다. 아래에서 결제하실 수 있어요.');
 
-      ktxTrain = { ...d.train,
-        from: d.train.parsedFrom, to: d.train.parsedTo,
-        date: d.train.parsedDate, passengers: d.train.parsedPassengers,
-      };
+      (function() {
+        const t = d.train;
+        const pax = t.parsedPassengers || 1;
+        // Claude가 총액을 이미 반영했으면 그대로, 1인 기준이면 곱셈 보정
+        const perPerson = t.priceKrwPerPerson || t.priceKrw || 59800;
+        const totalKrw  = t.priceKrw && t.priceKrw >= perPerson * pax
+          ? t.priceKrw : perPerson * pax;
+        const totalUsdc = t.priceUsdc && Number(t.priceUsdc) >= (perPerson * pax / (t.exchangeRate || 1380)) * 0.9
+          ? t.priceUsdc : (totalKrw / (t.exchangeRate || 1380)).toFixed(4);
+        ktxTrain = { ...t,
+          from: t.parsedFrom, to: t.parsedTo,
+          date: t.parsedDate, passengers: pax,
+          priceKrwPerPerson: perPerson,
+          priceKrw:  totalKrw,
+          priceUsdc: totalUsdc,
+        };
+      })();
       renderKtxCard(ktxTrain);
       $('ktx-steps').style.display = 'none';
       $('ktx-complete-card').style.display = 'none';
@@ -1610,8 +1623,11 @@ function renderKtxCard(t) {
     '</div>' +
     '<div class="ktx-price">' +
       '<div class="ktx-price-left">' +
-        '<span class="ktx-krw-label">KRW 운임</span>' +
+        '<span class="ktx-krw-label">KRW 운임 · ' + (t.passengers || 1) + '인 합산</span>' +
         '<span class="ktx-krw">₩' + Number(t.priceKrw).toLocaleString('ko-KR') + '</span>' +
+        (t.priceKrwPerPerson && (t.passengers || 1) > 1
+          ? '<span style="font-size:10px;color:rgba(255,255,255,.5)">(1인 ₩' + Number(t.priceKrwPerPerson).toLocaleString('ko-KR') + ')</span>'
+          : '') +
       '</div>' +
       '<div class="ktx-price-right">' +
         '<span class="ktx-usdc-label">USDC 환산 (₩' + (t.exchangeRate || '—') + '/USD)</span>' +

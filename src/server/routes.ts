@@ -1837,7 +1837,13 @@ router.post("/api/demo/ktx-search", async (req, res) => {
 - 한 번에 여러 항목을 묻지 마세요.
 - 모든 항목이 확보되면 아래 JSON을 **코드블록 없이 그대로** 반환하세요. 다른 설명은 절대 추가하지 마세요.
 
-{"parsedFrom":"서울","parsedTo":"부산","parsedDate":"2026-05-21","parsedDepTime":"오전","parsedPassengers":1,"trainNo":"KTX 101","depTime":"09:00","arrTime":"11:40","duration":"2h 40m","seatClass":"일반실","car":"9호차","seat":"15A","priceKrw":59800,"priceUsdc":"43.3333","exchangeRate":1380,"available":true,"note":"직통 운행"}`;
+{"parsedFrom":"서울","parsedTo":"부산","parsedDate":"2026-05-21","parsedDepTime":"오전","parsedPassengers":3,"trainNo":"KTX 101","depTime":"09:00","arrTime":"11:40","duration":"2h 40m","seatClass":"일반실","car":"9호차","seat":"15A","priceKrwPerPerson":59800,"priceKrw":179400,"priceUsdc":"130.0","exchangeRate":1380,"available":true,"note":"직통 운행 · 3인 합산 금액"}
+
+[가격 규칙]
+- priceKrwPerPerson: 1인 편도 운임 (경로·등급 기반)
+- priceKrw: priceKrwPerPerson × parsedPassengers (총 합산 운임)
+- priceUsdc: priceKrw ÷ exchangeRate (소수점 4자리, 총 합산 금액)
+- exchangeRate: 오늘 기준 원/달러 환율 (예: 1380)`;
 
   try {
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
