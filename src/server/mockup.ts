@@ -924,15 +924,21 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
 
       <!-- KTX-HIST · 예약 내역 -->
       <div class="screen" id="KTX-HIST">
+        <div class="top-nav">
+          <button class="back" onclick="go('M2')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            결제
+          </button>
+          <div class="spacer"></div>
+          <div class="title">예약 내역</div>
+          <div class="spacer"></div>
+        </div>
         <div class="screen-inner">
-          <div class="topbar">
-            <span class="topbar-title">KTX 예약 내역</span>
-          </div>
           <div style="padding:0 0 16px">
             <div id="ktx-hist-list">
               <div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">예약 내역이 없습니다</div>
             </div>
-            <button class="btn secondary" onclick="go('M2')" style="width:100%;margin-top:4px">닫기</button>
+
           </div>
         </div>
       </div>
