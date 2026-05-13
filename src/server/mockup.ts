@@ -1404,12 +1404,13 @@ function ktxSearchErr(msg) {
 }
 
 function ktxMd(text) {
-  const boldRe = new RegExp('\\*\\*(.+?)\\*\\*', 'g');
-  const italicRe = new RegExp('\\*(.+?)\\*', 'g');
-  return text
-    .replace(boldRe, '<strong>$1</strong>')
-    .replace(italicRe, '$1')
-    .split(String.fromCharCode(10)).join('<br>');
+  // **bold** → <strong> (split on ** to avoid regex issues in template literals)
+  const parts = text.split('**');
+  let out = '';
+  for (let i = 0; i < parts.length; i++) {
+    out += i % 2 === 1 ? '<strong>' + parts[i] + '</strong>' : parts[i];
+  }
+  return out.split(String.fromCharCode(10)).join('<br>');
 }
 function ktxAppendBubble(role, text) {
   const log = $('ktx-chat-log');
