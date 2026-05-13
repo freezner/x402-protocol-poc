@@ -643,7 +643,7 @@ export function getMockupHtml(): string {
 
           <!-- ① 초소액 결제 아코디언 -->
           <div class="accordion">
-            <div class="accordion-hd open" id="acc-hd-0" onclick="toggleAccordion(0)">
+            <div class="accordion-hd" id="acc-hd-0" onclick="toggleAccordion(0)">
               <div class="accordion-hd-left">
                 <div class="accordion-hd-title">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2 2"/></svg>
@@ -651,9 +651,9 @@ export function getMockupHtml(): string {
                 </div>
                 <div class="accordion-hd-sub">콘텐츠 구독 · 5건 · 0.025 USDC</div>
               </div>
-              <svg class="accordion-chevron open" id="acc-cv-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg class="accordion-chevron" id="acc-cv-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="accordion-body open" id="acc-bd-0">
+            <div class="accordion-body" id="acc-bd-0">
               <div class="accordion-inner">
                 <div class="sub" style="margin-bottom:10px">기사당 0.005 USDC · x402 실제 온체인 결제</div>
                 <div id="m2-list" class="list">
