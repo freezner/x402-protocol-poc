@@ -725,40 +725,49 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                   <button class="btn" id="ktx-search-btn" onclick="runKtxSearch()" style="margin-top:0">
                     🔍 ClaudeAssist로 열차 검색
                   </button>
-                  <div class="status" id="ktx-search-status"></div>
+                  <!-- 검색 오류만 표시, 성공 시 숨김 -->
+                  <div id="ktx-search-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
                 </div>
 
-                <!-- Claude 검색 결과 카드 (초기 숨김) -->
-                <div id="ktx-result-area" style="display:none">
-                  <div style="font-size:11px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:4px">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
+                <!-- 검색 결과 + 결제 영역 -->
+                <div id="ktx-result-area" style="display:none;margin-top:4px">
+
+                  <!-- 결과 레이블 -->
+                  <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;gap:5px">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
                     ClaudeAssist 추천 열차
                   </div>
+
+                  <!-- 동적 KTX 카드 -->
                   <div class="ktx-card" id="ktx-card-dynamic"></div>
 
-                  <div style="font-size:11px;color:var(--muted);margin:8px 0 10px;line-height:1.5">
-                    * 실제 코레일 예약은 지원되지 않습니다. USDC 결제 후 예약 완료로 처리됩니다.
+                  <!-- 데모 안내 -->
+                  <div style="font-size:10px;color:var(--muted);margin:6px 0 14px;opacity:.7">
+                    ※ 코레일 API 미연동 — USDC 결제 완료 시 예약 확정 처리
                   </div>
 
-                  <!-- 진행 스텝 -->
-                  <div class="ktx-steps" id="ktx-steps" style="display:none">
+                  <!-- 결제 진행 스텝 (결제 시작 후 표시) -->
+                  <div class="ktx-steps" id="ktx-steps" style="display:none;margin-bottom:12px">
                     <div class="ktx-step" id="ktx-s0"><div class="ktx-step-dot" id="ktx-d0">1</div><span>열차 정보 확인</span></div>
                     <div class="ktx-step" id="ktx-s1"><div class="ktx-step-dot" id="ktx-d1">2</div><span>좌석 가용 확인</span></div>
                     <div class="ktx-step" id="ktx-s2"><div class="ktx-step-dot" id="ktx-d2">3</div><span>x402 USDC 결제</span></div>
                     <div class="ktx-step" id="ktx-s3"><div class="ktx-step-dot" id="ktx-d3">4</div><span>예약 완료</span></div>
                   </div>
 
-                  <button class="btn" id="ktx-run" onclick="runKtxReserve()" style="margin-top:12px">
+                  <!-- 결제 버튼 -->
+                  <button class="btn" id="ktx-run" onclick="runKtxReserve()">
                     🤖 에이전트 결제 · 예약 확정
                   </button>
-                  <div class="status" id="ktx-status"></div>
 
-                  <!-- 예약 완료 카드 (초기 숨김) -->
-                  <div id="ktx-complete-card" style="display:none;margin-top:12px;background:#f0faf5;border:1px solid #00a85a;border-radius:14px;padding:16px;text-align:center">
-                    <div style="font-size:28px;margin-bottom:6px">🎫</div>
-                    <div style="font-size:15px;font-weight:700;color:#00a85a;margin-bottom:4px">예약 완료</div>
-                    <div id="ktx-complete-detail" style="font-size:12px;color:var(--muted)"></div>
-                    <div style="font-size:11px;color:var(--muted);margin-top:6px">USDC 결제 완료 · 코레일 예약번호는 실제 API 연동 시 발급됩니다</div>
+                  <!-- 결제 오류만 표시 -->
+                  <div id="ktx-pay-err" style="display:none;font-size:12px;color:var(--danger);margin-top:8px;padding:0 2px"></div>
+
+                  <!-- 예약 완료 카드 -->
+                  <div id="ktx-complete-card" style="display:none;margin-top:14px;background:#f0faf5;border:1px solid #c2efd1;border-radius:14px;padding:16px;text-align:center">
+                    <div style="font-size:26px;margin-bottom:6px">🎫</div>
+                    <div style="font-size:15px;font-weight:700;color:#0f6a3e;margin-bottom:6px">예약 완료</div>
+                    <div id="ktx-complete-detail" style="font-size:12px;color:var(--muted);line-height:1.6"></div>
+                    <div style="font-size:10px;color:var(--muted);margin-top:8px;opacity:.7">코레일 예약번호는 실제 API 연동 시 발급됩니다</div>
                   </div>
                 </div>
 
@@ -1347,6 +1356,17 @@ async function runMicropayment() {
 /* ── KTX 열차 검색 (Claude API) ─────────────────────── */
 let ktxTrain = null;
 
+function ktxSearchErr(msg) {
+  const el = $('ktx-search-err');
+  el.textContent = msg ? '⚠ ' + msg : '';
+  el.style.display = msg ? 'block' : 'none';
+}
+function ktxPayErr(msg) {
+  const el = $('ktx-pay-err');
+  el.textContent = msg ? '⚠ ' + msg : '';
+  el.style.display = msg ? 'block' : 'none';
+}
+
 async function runKtxSearch() {
   const btn = $('ktx-search-btn');
   const from = $('ktx-from').value.trim() || '서울';
@@ -1356,7 +1376,7 @@ async function runKtxSearch() {
 
   btn.disabled = true;
   btn.textContent = 'ClaudeAssist 검색 중...';
-  showStatus('ktx-search-status', '', true);
+  ktxSearchErr('');
 
   try {
     const res = await fetch('/api/demo/ktx-search', {
@@ -1369,21 +1389,22 @@ async function runKtxSearch() {
 
     ktxTrain = { ...d.train, from, to, date, passengers };
     renderKtxCard(ktxTrain);
-    $('ktx-result-area').style.display = 'block';
+
+    // 결과 영역 초기화 후 표시
     $('ktx-steps').style.display = 'none';
-    $('ktx-status').className = 'status';
     $('ktx-complete-card').style.display = 'none';
+    $('ktx-run').style.display = '';
     $('ktx-run').disabled = false;
     $('ktx-run').textContent = '🤖 에이전트 결제 · 예약 확정';
-    // 스텝 상태 초기화
+    ktxPayErr('');
     for (let i = 0; i < 4; i++) {
       $('ktx-d' + i).className = 'ktx-step-dot';
       $('ktx-d' + i).textContent = i + 1;
       $('ktx-s' + i).className = 'ktx-step';
     }
-    showStatus('ktx-search-status', '✅ 열차 검색 완료', true);
+    $('ktx-result-area').style.display = 'block';
   } catch (e) {
-    showStatus('ktx-search-status', '❌ ' + e.message, false);
+    ktxSearchErr(e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = '🔍 ClaudeAssist로 열차 검색';
@@ -1420,7 +1441,7 @@ async function runKtxReserve() {
   const btn = $('ktx-run');
   btn.disabled = true;
   btn.textContent = '결제 처리 중...';
-  $('ktx-status').className = 'status';
+  ktxPayErr('');
   $('ktx-steps').style.display = 'flex';
 
   const delays = [600, 800, 0, 500];
@@ -1462,14 +1483,17 @@ async function runKtxReserve() {
       ktxTrain.trainNo + ' ' + ktxTrain.from + '→' + ktxTrain.to +
       ' ' + ktxTrain.depTime + '~' + ktxTrain.arrTime +
       ' · 0.01 USDC · ' + d.elapsedMs + 'ms';
-    $('ktx-complete-card').style.display = 'block';
     $('ktx-run').style.display = 'none';
-    showStatus('ktx-status', '', true);
+    $('ktx-complete-detail').innerHTML =
+      ktxTrain.trainNo + ' &nbsp;' + ktxTrain.from + ' → ' + ktxTrain.to + '<br>' +
+      ktxTrain.depTime + ' ~ ' + ktxTrain.arrTime +
+      ' &nbsp;·&nbsp; 0.01 USDC · ' + d.elapsedMs + 'ms';
+    $('ktx-complete-card').style.display = 'block';
     loadAccount();
   } catch (e) {
     $('ktx-d2').classList.remove('active');
     $('ktx-s2').classList.remove('active');
-    showStatus('ktx-status', '❌ ' + e.message, false);
+    ktxPayErr(e.message);
     btn.disabled = false;
     btn.textContent = '🤖 에이전트 결제 · 예약 확정';
   }
