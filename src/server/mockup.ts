@@ -2314,37 +2314,83 @@ async function loadWallet() {
   }
 }
 
+var m4AllTxs = [];
+var m4TxPage = 0;
+var M4_TX_PAGE_SIZE = 5;
+var m4TxObserver = null;
+
+function makeTxRow(tx, showBorder) {
+  var categoryIcon = { transport: '🚄', stay: '🏨', food: '🍽️', content: '📄', risk: '🚫' };
+  var icon = categoryIcon[tx.category] || '💳';
+  var isOk = tx.status === 'approved';
+  var usdcAmt = tx.amountUsdc ? Number(tx.amountUsdc).toFixed(4) + ' USDC' : '';
+  var border = showBorder ? 'border-bottom:1px solid var(--line);' : '';
+  var basescanHref = m4WalletAddress ? 'https://sepolia.basescan.org/address/' + m4WalletAddress : '#';
+  return (
+    '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;' + border + '">' +
+      '<div style="width:34px;height:34px;border-radius:50%;background:' + (isOk ? '#eef4ff' : '#fff0f0') + ';display:grid;place-items:center;font-size:16px;flex-shrink:0">' + icon + '</div>' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tx.merchant + '</div>' +
+        '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + new Date(tx.createdAt).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0">' +
+        (usdcAmt ? '<div style="font-size:12px;font-weight:700;color:' + (isOk ? 'var(--accent)' : 'var(--danger)') + '">' + (isOk ? '-' : '') + usdcAmt + '</div>' : '') +
+        '<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">' +
+          '<span style="font-size:10px;font-weight:600;color:' + (isOk ? 'var(--success)' : 'var(--danger)') + '">' + (isOk ? '완료' : '차단') + '</span>' +
+          (isOk ? '<a href="' + basescanHref + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--accent);text-decoration:none;background:#eef4ff;border:1px solid #c5d9f7;border-radius:6px;padding:3px 7px;margin-left:4px">BaseScan<svg width=\"9\" height=\"9\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/><polyline points=\"15 3 21 3 21 9\"/><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"/></svg></a>' : '') +
+        '</div>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+function m4AppendTxPage() {
+  var list = $('m4-tx-list');
+  var sentinel = $('m4-tx-sentinel');
+  if (sentinel) sentinel.remove();
+
+  var start = m4TxPage * M4_TX_PAGE_SIZE;
+  var slice = m4AllTxs.slice(start, start + M4_TX_PAGE_SIZE);
+  if (slice.length === 0) return;
+
+  slice.forEach(function(tx, i) {
+    var isLast = start + i === m4AllTxs.length - 1;
+    var div = document.createElement('div');
+    div.innerHTML = makeTxRow(tx, !isLast);
+    list.appendChild(div.firstChild);
+  });
+  m4TxPage++;
+
+  if (m4TxPage * M4_TX_PAGE_SIZE < m4AllTxs.length) {
+    // 센티널 추가
+    var s = document.createElement('div');
+    s.id = 'm4-tx-sentinel';
+    s.style.height = '1px';
+    list.appendChild(s);
+    if (m4TxObserver) m4TxObserver.observe(s);
+  }
+}
+
 function renderM4TxList(txs) {
-  const list = $('m4-tx-list');
-  if (!txs || txs.length === 0) {
+  var list = $('m4-tx-list');
+  m4AllTxs = txs || [];
+  m4TxPage = 0;
+
+  if (m4TxObserver) { m4TxObserver.disconnect(); m4TxObserver = null; }
+  list.innerHTML = '';
+
+  if (m4AllTxs.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>';
     return;
   }
-  const categoryIcon = { transport: '🚄', stay: '🏨', food: '🍽️', content: '📄', risk: '🚫' };
-  list.innerHTML = txs.map(function(tx, idx) {
-    var icon = categoryIcon[tx.category] || '💳';
-    var isOk = tx.status === 'approved';
-    var usdcAmt = tx.amountUsdc ? Number(tx.amountUsdc).toFixed(4) + ' USDC' : '';
-    var border = idx < txs.length - 1 ? 'border-bottom:1px solid var(--line);' : '';
-    var basescanHref = m4WalletAddress
-      ? 'https://sepolia.basescan.org/address/' + m4WalletAddress
-      : '#';
-    return (
-      '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;' + border + '">' +
-        '<div style="width:34px;height:34px;border-radius:50%;background:' + (isOk ? '#eef4ff' : '#fff0f0') + ';display:grid;place-items:center;font-size:16px;flex-shrink:0">' + icon + '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tx.merchant + '</div>' +
-          '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + new Date(tx.createdAt).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>' +
-        '</div>' +
-        '<div style="text-align:right;flex-shrink:0">' +
-          (usdcAmt ? '<div style="font-size:12px;font-weight:700;color:' + (isOk ? 'var(--accent)' : 'var(--danger)') + '">' + (isOk ? '-' : '') + usdcAmt + '</div>' : '') +
-          '<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">' +
-            (isOk ? '<a href="' + basescanHref + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--accent);text-decoration:none;background:#eef4ff;border:1px solid #c5d9f7;border-radius:6px;padding:3px 7px;margin-top:3px">BaseScan<svg width=\"9\" height=\"9\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/><polyline points=\"15 3 21 3 21 9\"/><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"/></svg></a>' : '') +
-          '</div>' +
-        '</div>' +
-      '</div>'
-    );
-  }).join('');
+
+  // 스크롤 컨테이너(.screen) 기준으로 IntersectionObserver 설정
+  var screen = document.querySelector('#M4 .screen-inner') || document.querySelector('#M4');
+  m4TxObserver = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) m4AppendTxPage();
+  }, { root: screen ? screen.parentElement : null, threshold: 0.1 });
+
+  m4AppendTxPage();
 }
 
 async function copyAddress() {
