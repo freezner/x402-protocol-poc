@@ -1567,19 +1567,25 @@ const CONTENT_STEPS: DemoScenarioStep[] = [
   },
 ];
 
-async function callPaidEndpoint(fetchFn: typeof fetch, endpoint: string) {
+async function callPaidEndpoint(fetchFn: typeof fetch, endpoint: string, attempt = 1): Promise<{ endpoint: string; elapsedMs: number; payload: unknown }> {
   const url = `http://localhost:${config.server.port}${endpoint}`;
   const startedAt = Date.now();
   const response = await fetchFn(url);
   const elapsedMs = Date.now() - startedAt;
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
-    let hint = detail.slice(0, 200);
-    // x402 퍼실리테이터가 결제를 거부한 경우 → 빈 바디({}) 가능
-    if (response.status === 402 && (!hint || hint === "{}")) {
-      hint = "퍼실리테이터가 결제를 거부했습니다 (레이트리밋 또는 잔고 부족)";
+    const hint = detail.slice(0, 200);
+    const isFacilitatorReject = response.status === 402 && (!hint || hint === "{}");
+    // 퍼실리테이터 레이트리밋: 1회 자동 재시도 (3초 후)
+    if (isFacilitatorReject && attempt === 1) {
+      console.log(`[demo] 퍼실리테이터 거부 → 3초 후 재시도: ${endpoint}`);
+      await new Promise(r => setTimeout(r, 3000));
+      return callPaidEndpoint(fetchFn, endpoint, 2);
     }
-    throw new Error(`HTTP ${response.status} ${endpoint}: ${hint}`);
+    const msg = isFacilitatorReject
+      ? "퍼실리테이터가 결제를 거부했습니다. 잠시 후 다시 시도해 주세요."
+      : hint;
+    throw new Error(`HTTP ${response.status} ${endpoint}: ${msg}`);
   }
   const payload = await response.json();
   return { endpoint, elapsedMs, payload };
@@ -1602,7 +1608,7 @@ async function runPaidScenario(
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     // 연속 결제 간 딜레이: 퍼실리테이터 레이트리밋 및 이전 tx 제출 대기
-    if (i > 0) await new Promise(r => setTimeout(r, 800));
+    if (i > 0) await new Promise(r => setTimeout(r, 2500));
     const paid = await callPaidEndpoint(fetchFn, step.endpoint);
     demoStateStore.addApprovedTransaction({
       kind,
