@@ -2317,7 +2317,6 @@ async function loadWallet() {
 var m4AllTxs = [];
 var m4TxPage = 0;
 var M4_TX_PAGE_SIZE = 5;
-var m4TxObserver = null;
 
 function makeTxRow(tx, showBorder) {
   var categoryIcon = { transport: '🚄', stay: '🏨', food: '🍽️', content: '📄', risk: '🚫' };
@@ -2344,30 +2343,24 @@ function makeTxRow(tx, showBorder) {
   );
 }
 
-function m4AppendTxPage() {
-  var list = $('m4-tx-list');
-  var sentinel = $('m4-tx-sentinel');
-  if (sentinel) sentinel.remove();
-
+function m4LoadMore() {
+  var list = $('m4-tx-list-rows');
+  var moreBtn = $('m4-tx-more');
   var start = m4TxPage * M4_TX_PAGE_SIZE;
   var slice = m4AllTxs.slice(start, start + M4_TX_PAGE_SIZE);
-  if (slice.length === 0) return;
-
   slice.forEach(function(tx, i) {
-    var isLast = start + i === m4AllTxs.length - 1;
+    var totalIdx = start + i;
+    var isLast = totalIdx === m4AllTxs.length - 1;
     var div = document.createElement('div');
     div.innerHTML = makeTxRow(tx, !isLast);
     list.appendChild(div.firstChild);
   });
   m4TxPage++;
-
-  if (m4TxPage * M4_TX_PAGE_SIZE < m4AllTxs.length) {
-    // 센티널 추가
-    var s = document.createElement('div');
-    s.id = 'm4-tx-sentinel';
-    s.style.height = '1px';
-    list.appendChild(s);
-    if (m4TxObserver) m4TxObserver.observe(s);
+  var remaining = m4AllTxs.length - m4TxPage * M4_TX_PAGE_SIZE;
+  if (remaining <= 0) {
+    moreBtn.style.display = 'none';
+  } else {
+    moreBtn.textContent = '더보기 (' + remaining + '건 남음)';
   }
 }
 
@@ -2375,22 +2368,14 @@ function renderM4TxList(txs) {
   var list = $('m4-tx-list');
   m4AllTxs = txs || [];
   m4TxPage = 0;
-
-  if (m4TxObserver) { m4TxObserver.disconnect(); m4TxObserver = null; }
-  list.innerHTML = '';
-
   if (m4AllTxs.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>';
     return;
   }
-
-  // #M4(.screen)이 실제 스크롤 컨테이너 — root로 지정
-  var scrollRoot = document.getElementById('M4');
-  m4TxObserver = new IntersectionObserver(function(entries) {
-    if (entries[0].isIntersecting) m4AppendTxPage();
-  }, { root: scrollRoot, rootMargin: '0px 0px 60px 0px', threshold: 0 });
-
-  m4AppendTxPage();
+  list.innerHTML =
+    '<div id="m4-tx-list-rows"></div>' +
+    '<button id="m4-tx-more" onclick="m4LoadMore()" style="display:none;width:100%;margin-top:10px;padding:9px 0;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:var(--text);font-size:12px;font-weight:600;cursor:pointer">더보기</button>';
+  m4LoadMore();
 }
 
 async function copyAddress() {
