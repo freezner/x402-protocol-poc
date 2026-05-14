@@ -1029,7 +1029,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                   <div style="display:flex;align-items:center;gap:10px">
                     <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0">$</div>
                     <div>
-                      <div style="font-size:13px;font-weight:600">AI 서브월렛</div>
+                      <div style="font-size:13px;font-weight:600">전북은행 디지털자산 지갑</div>
                       <div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div>
                     </div>
                   </div>
@@ -1038,41 +1038,46 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                     <div style="font-size:11px;color:var(--muted)">USDC</div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
 
-                <!-- 환전 UI -->
-                <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
-                  <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">환전</div>
-                  <!-- 방향 탭 -->
-                  <div style="display:flex;background:#f0f4f9;border-radius:10px;padding:3px;margin-bottom:12px">
-                    <button id="m4-swap-tab-0" onclick="setSwapDir(0)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:var(--primary);color:#fff;transition:all .2s">KRW → USDC</button>
-                    <button id="m4-swap-tab-1" onclick="setSwapDir(1)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:transparent;color:var(--muted);transition:all .2s">USDC → KRW</button>
-                  </div>
-                  <!-- 입력 -->
-                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-                    <div style="flex:1;position:relative">
-                      <input id="m4-swap-input" type="number" placeholder="0" min="0"
-                        oninput="updateSwapPreview()"
-                        style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:10px 48px 10px 12px;font-size:15px;font-weight:700;color:var(--text);background:#f7f9fc;outline:none">
-                      <span id="m4-swap-unit" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--muted)">KRW</span>
-                    </div>
-                  </div>
-                  <div id="m4-swap-preview" style="font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
-                  <button class="btn" onclick="runSwap()" style="width:100%;font-size:13px">환전 실행</button>
-                  <div class="status" id="m4-swap-status" style="margin-top:8px"></div>
+          <!-- 환전 아코디언 (기본 접힘) -->
+          <div class="accordion">
+            <div class="accordion-hd" id="m4-acc-hd-1" onclick="toggleM4Acc(1)">
+              <div class="accordion-hd-left">
+                <div class="accordion-hd-title">환전</div>
+              </div>
+              <svg class="accordion-chevron" id="m4-acc-cv-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="accordion-body" id="m4-acc-bd-1">
+              <div class="accordion-inner">
+                <div style="display:flex;background:#f0f4f9;border-radius:10px;padding:3px;margin-bottom:12px">
+                  <button id="m4-swap-tab-0" onclick="setSwapDir(0)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:var(--primary);color:#fff;transition:all .2s">KRW → USDC</button>
+                  <button id="m4-swap-tab-1" onclick="setSwapDir(1)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:transparent;color:var(--muted);transition:all .2s">USDC → KRW</button>
                 </div>
+                <div style="position:relative;margin-bottom:8px">
+                  <input id="m4-swap-input" type="number" placeholder="0" min="0"
+                    oninput="updateSwapPreview()"
+                    style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:10px 48px 10px 12px;font-size:15px;font-weight:700;color:var(--text);background:#f7f9fc;outline:none">
+                  <span id="m4-swap-unit" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--muted)">KRW</span>
+                </div>
+                <div id="m4-swap-preview" style="font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
+                <button class="btn" onclick="runSwap()" style="width:100%;font-size:13px">환전 실행</button>
+                <div class="status" id="m4-swap-status" style="margin-top:8px"></div>
               </div>
             </div>
           </div>
 
           <!-- 네트워크 아코디언 (기본 접힘) -->
           <div class="accordion">
-            <div class="accordion-hd" id="m4-acc-hd-1" onclick="toggleM4Acc(1)">
+            <div class="accordion-hd" id="m4-acc-hd-2" onclick="toggleM4Acc(2)">
               <div class="accordion-hd-left">
                 <div class="accordion-hd-title">네트워크</div>
               </div>
-              <svg class="accordion-chevron" id="m4-acc-cv-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg class="accordion-chevron" id="m4-acc-cv-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="accordion-body" id="m4-acc-bd-1">
+            <div class="accordion-body" id="m4-acc-bd-2">
               <div class="accordion-inner">
                 <div class="setting-row"><span>체인</span><span class="chip">Base Sepolia</span></div>
                 <div class="setting-row"><span>체인 ID</span><span class="chip">84532</span></div>
@@ -1083,13 +1088,13 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
 
           <!-- 지갑 결제 내역 아코디언 -->
           <div class="accordion">
-            <div class="accordion-hd open" id="m4-acc-hd-2" onclick="toggleM4Acc(2)">
+            <div class="accordion-hd open" id="m4-acc-hd-3" onclick="toggleM4Acc(3)">
               <div class="accordion-hd-left">
                 <div class="accordion-hd-title">지갑 결제 내역</div>
               </div>
-              <svg class="accordion-chevron open" id="m4-acc-cv-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+              <svg class="accordion-chevron open" id="m4-acc-cv-3" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
-            <div class="accordion-body open" id="m4-acc-bd-2">
+            <div class="accordion-body open" id="m4-acc-bd-3">
               <div class="accordion-inner">
                 <div id="m4-tx-list">
                   <div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>
