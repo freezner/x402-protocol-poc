@@ -366,6 +366,15 @@ export function getMockupHtml(): string {
     .list-item-price { font-size: 11px; color: var(--accent); font-weight: 600; }
 
     /* ── Accordion ──────────────────────────────────── */
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%) translateY(12px);
+      background: rgba(30,30,40,.92); color: #fff; font-size: 13px; font-weight: 500;
+      padding: 10px 20px; border-radius: 24px; white-space: nowrap;
+      opacity: 0; pointer-events: none; z-index: 9999;
+      transition: opacity .2s, transform .2s;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     .accordion       { margin-bottom: 12px; }
     .accordion-hd    {
       display: flex; align-items: center; justify-content: space-between;
@@ -629,6 +638,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
 
     <!-- App root: all screens live here -->
     <div id="app">
+    <div class="toast" id="toast"></div>
 
       <!-- M0 · Intro -->
       <div class="screen active" id="M0">
@@ -639,7 +649,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
           <p>x402 프로토콜 기반 Base USDC(Sepolia) 결제 연동</p>
           <button class="btn" id="m0-btn" onclick="startWithPasskey()" style="margin-top:8px;max-width:240px;display:flex;align-items:center;justify-content:center;gap:8px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            PassKey로 시작
+            PassKey 인증
           </button>
           <div id="m0-err" style="font-size:12px;color:var(--danger);margin-top:10px;display:none"></div>
           <button id="m0-skip" onclick="go('M1')" style="display:none;margin-top:6px;font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;text-decoration:underline">PassKey 없이 계속</button>
@@ -988,57 +998,67 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             </div>
           </div>
 
-          <!-- 자산 목록 -->
-          <div class="card">
-            <div style="font-size:15px;font-weight:700;margin-bottom:12px">보유 자산</div>
-            <div class="setting-row">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">$</div>
-                <div>
-                  <div style="font-size:13px;font-weight:600">USD Coin</div>
-                  <div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div>
+          <!-- 보유 자산 아코디언 -->
+          <div class="accordion">
+            <div class="accordion-hd open" id="m4-acc-hd-0" onclick="toggleM4Acc(0)">
+              <div class="accordion-hd-left">
+                <div class="accordion-hd-title">보유 자산</div>
+              </div>
+              <svg class="accordion-chevron open" id="m4-acc-cv-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="accordion-body open" id="m4-acc-bd-0">
+              <div class="accordion-inner">
+                <div class="setting-row">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">$</div>
+                    <div><div style="font-size:13px;font-weight:600">USD Coin</div><div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div></div>
+                  </div>
+                  <div style="text-align:right"><div style="font-size:14px;font-weight:700" id="m4-usdc">—</div><div style="font-size:11px;color:var(--muted)">USDC</div></div>
+                </div>
+                <div class="setting-row" style="border:none">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:32px;height:32px;border-radius:50%;background:#627eea;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">Ξ</div>
+                    <div><div style="font-size:13px;font-weight:600">Ethereum</div><div style="font-size:11px;color:var(--muted)">ETH · 가스비</div></div>
+                  </div>
+                  <div style="text-align:right"><div style="font-size:14px;font-weight:700" id="m4-eth">—</div><div style="font-size:11px;color:var(--muted)">ETH</div></div>
                 </div>
               </div>
-              <div style="text-align:right">
-                <div style="font-size:14px;font-weight:700" id="m4-usdc">—</div>
-                <div style="font-size:11px;color:var(--muted)">USDC</div>
+            </div>
+          </div>
+
+          <!-- 네트워크 아코디언 (기본 접힘) -->
+          <div class="accordion">
+            <div class="accordion-hd" id="m4-acc-hd-1" onclick="toggleM4Acc(1)">
+              <div class="accordion-hd-left">
+                <div class="accordion-hd-title">네트워크</div>
+              </div>
+              <svg class="accordion-chevron" id="m4-acc-cv-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="accordion-body" id="m4-acc-bd-1">
+              <div class="accordion-inner">
+                <div class="setting-row"><span>체인</span><span class="chip">Base Sepolia</span></div>
+                <div class="setting-row"><span>체인 ID</span><span class="chip">84532</span></div>
+                <div class="setting-row" style="border:none"><span>Facilitator</span><span style="font-size:11px;color:var(--muted)">x402.org</span></div>
               </div>
             </div>
-            <div class="setting-row" style="border:none">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:32px;height:32px;border-radius:50%;background:#627eea;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">Ξ</div>
-                <div>
-                  <div style="font-size:13px;font-weight:600">Ethereum</div>
-                  <div style="font-size:11px;color:var(--muted)">ETH · 가스비</div>
+          </div>
+
+          <!-- 지갑 결제 내역 아코디언 -->
+          <div class="accordion">
+            <div class="accordion-hd open" id="m4-acc-hd-2" onclick="toggleM4Acc(2)">
+              <div class="accordion-hd-left">
+                <div class="accordion-hd-title">지갑 결제 내역</div>
+              </div>
+              <svg class="accordion-chevron open" id="m4-acc-cv-2" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="accordion-body open" id="m4-acc-bd-2">
+              <div class="accordion-inner">
+                <div id="m4-tx-list">
+                  <div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>
                 </div>
               </div>
-              <div style="text-align:right">
-                <div style="font-size:14px;font-weight:700" id="m4-eth">—</div>
-                <div style="font-size:11px;color:var(--muted)">ETH</div>
-              </div>
             </div>
           </div>
-
-          <!-- 네트워크 정보 -->
-          <div class="card">
-            <div style="font-size:15px;font-weight:700;margin-bottom:12px">네트워크</div>
-            <div class="setting-row"><span>체인</span><span class="chip">Base Sepolia</span></div>
-            <div class="setting-row"><span>체인 ID</span><span class="chip">84532</span></div>
-            <div class="setting-row" style="border:none"><span>Facilitator</span><span style="font-size:11px;color:var(--muted)">x402.org</span></div>
-          </div>
-
-          <!-- 온체인 트랜잭션 히스토리 -->
-          <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-              <div style="font-size:15px;font-weight:700">온체인 트랜잭션</div>
-              <button onclick="loadWallet()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0">새로고침</button>
-            </div>
-            <div id="m4-tx-list">
-              <div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>
-            </div>
-          </div>
-
-          <div class="status" id="m4-copy-status"></div>
         </div>
       </div>
 
@@ -2268,7 +2288,6 @@ function renderM4TxList(txs) {
         '<div style="text-align:right;flex-shrink:0">' +
           (usdcAmt ? '<div style="font-size:12px;font-weight:700;color:' + (isOk ? 'var(--accent)' : 'var(--danger)') + '">' + (isOk ? '-' : '') + usdcAmt + '</div>' : '') +
           '<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">' +
-            '<span style="font-size:10px;font-weight:600;color:' + (isOk ? 'var(--success)' : 'var(--danger)') + '">' + (isOk ? '완료' : '차단') + '</span>' +
             (isOk ? '<a href="' + basescanHref + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--accent);text-decoration:none;background:#eef4ff;border:1px solid #c5d9f7;border-radius:6px;padding:3px 7px;margin-top:3px">BaseScan<svg width=\"9\" height=\"9\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/><polyline points=\"15 3 21 3 21 9\"/><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"/></svg></a>' : '') +
           '</div>' +
         '</div>' +
@@ -2281,11 +2300,27 @@ async function copyAddress() {
   if (!m4WalletAddress) return;
   try {
     await navigator.clipboard.writeText(m4WalletAddress);
-    showStatus('m4-copy-status', '✅ 주소가 클립보드에 복사되었습니다.', true);
-    setTimeout(() => { $('m4-copy-status').className = 'status'; }, 2000);
+    showToast('주소가 복사되었습니다');
   } catch {
-    showStatus('m4-copy-status', '주소: ' + m4WalletAddress, true);
+    showToast(m4WalletAddress);
   }
+}
+
+function showToast(msg) {
+  var t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+function toggleM4Acc(idx) {
+  var hd = $('m4-acc-hd-' + idx);
+  var bd = $('m4-acc-bd-' + idx);
+  var cv = $('m4-acc-cv-' + idx);
+  var isOpen = bd.classList.contains('open');
+  hd.classList.toggle('open', !isOpen);
+  bd.classList.toggle('open', !isOpen);
+  cv.classList.toggle('open', !isOpen);
 }
 
 function openBaseScan() {
