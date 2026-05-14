@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { randomBytes } from "crypto";
 import { Router } from "express";
 import type {
   PaidRoute,
@@ -13,6 +14,19 @@ import { getMockupHtml } from "./mockup.js";
 import { demoStateStore, budgetStore, autoChargeStore, m2mWalletStore } from "./demoState.js";
 
 const router = Router();
+
+// ============================================================
+// Passkey / WebAuthn challenge store (in-memory, 5-minute TTL)
+// ============================================================
+const passkeyChallengeTtl = 5 * 60 * 1000;
+const passkeyStore = new Map<string, number>();
+
+function prunePasskeyChallenges() {
+  const now = Date.now();
+  for (const [k, ts] of passkeyStore) {
+    if (now - ts > passkeyChallengeTtl) passkeyStore.delete(k);
+  }
+}
 
 // ============================================================
 // 유료 API 라우트 정의
@@ -2028,5 +2042,28 @@ for (const index of [1, 2, 3, 4, 5]) {
     });
   });
 }
+
+// ============================================================
+// Passkey / WebAuthn 엔드포인트
+// ============================================================
+
+// 클라이언트가 WebAuthn 챌린지를 요청
+router.get("/api/passkey/challenge", (_req, res) => {
+  prunePasskeyChallenges();
+  const challenge = randomBytes(32).toString("base64url");
+  passkeyStore.set(challenge, Date.now());
+  res.json({ challenge });
+});
+
+// 클라이언트가 assertion/attestation 완료 후 전송 (데모: 챌린지 존재 여부만 확인)
+router.post("/api/passkey/verify", (req, res) => {
+  const { challenge } = req.body as { challenge?: string };
+  if (!challenge || !passkeyStore.has(challenge)) {
+    res.status(400).json({ ok: false, error: "invalid challenge" });
+    return;
+  }
+  passkeyStore.delete(challenge);
+  res.json({ ok: true });
+});
 
 export default router;

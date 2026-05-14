@@ -797,7 +797,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                 <div id="m2-list" class="list">
                   <div class="list-item" id="m2-item-0" data-price="0.005" data-idx="0" onclick="var cb=$('m2-cb-0');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-0"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">전통 금융의 블록체인 수익 구조</span><span class="list-item-price">0.005 USDC</span></div><span class="chip" id="m2-chip-0">미결제</span></div>
                   <div class="list-item" id="m2-item-1" data-price="0.003" data-idx="1" onclick="var cb=$('m2-cb-1');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-1"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">스테이블코인 특화 L1의 부상</span><span class="list-item-price">0.003 USDC</span></div><span class="chip" id="m2-chip-1">미결제</span></div>
-                  <div class="list-item" id="m2-item-2" data-price="0.0045" data-idx="2" onclick="var cb=$('m2-cb-2');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-2"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">코빗 리서치센터 2026년 가상자산 시장 전망</span><span class="list-item-price">0.0045 USDC</span></div><span class="chip" id="m2-chip-2">미결제</span></div>
+                  <div class="list-item" id="m2-item-2" data-price="0.0045" data-idx="2" onclick="var cb=$('m2-cb-2');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-2"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">2026년 가상자산 시장 전망</span><span class="list-item-price">0.0045 USDC</span></div><span class="chip" id="m2-chip-2">미결제</span></div>
                   <div class="list-item" id="m2-item-3" data-price="0.015" data-idx="3" onclick="var cb=$('m2-cb-3');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-3"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">무한 자금 루프: 세일러의 DAT 로드맵</span><span class="list-item-price">0.015 USDC</span></div><span class="chip" id="m2-chip-3">미결제</span></div>
                   <div class="list-item" id="m2-item-4" data-price="0.0025" data-idx="4" onclick="var cb=$('m2-cb-4');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-4"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">기관 자금 동향: ETF 시장 업데이트</span><span class="list-item-price">0.0025 USDC</span></div><span class="chip" id="m2-chip-4">미결제</span></div>
                 </div>
@@ -2542,28 +2542,103 @@ function runSwap() {
   requestAnimationFrame(function() { ov.style.opacity = '1'; });
 }
 
-function passkeySign() {
+// WebAuthn 헬퍼
+function _bufToB64u(buf) {
+  var bytes = new Uint8Array(buf);
+  var bin = '';
+  for (var i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).split('+').join('-').split('/').join('_').split('=').join('');
+}
+function _b64uToBuf(str) {
+  str = str.split('-').join('+').split('_').join('/');
+  while (str.length % 4) str += '=';
+  return Uint8Array.from(atob(str), function(c) { return c.charCodeAt(0); }).buffer;
+}
+
+function _swapComplete() {
+  $('passkey-overlay').style.display = 'none';
+  var val = _swapPendingVal;
+  if (m4SwapDir === 0) {
+    var usdc = (val / M4_RATE).toFixed(4);
+    showStatus('m4-swap-status', '✅ ₩' + Math.round(val).toLocaleString('ko-KR') + ' → ' + usdc + ' USDC 환전 완료', true);
+  } else {
+    var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
+    showStatus('m4-swap-status', '✅ ' + val.toFixed(4) + ' USDC → ₩' + krw + ' 환전 완료', true);
+  }
+  $('m4-swap-input').value = '';
+  $('m4-swap-preview').textContent = '';
+  setTimeout(function() { $('m4-swap-status').className = 'status'; }, 3500);
+}
+
+async function passkeySign() {
   $('passkey-state-idle').style.display = 'none';
   $('passkey-state-signing').style.display = 'block';
-  setTimeout(function() {
+
+  var pendingChallenge = '';
+  try {
+    // 1. 서버에서 챌린지 발급
+    var resp = await fetch('/api/passkey/challenge');
+    var chalData = await resp.json();
+    pendingChallenge = chalData.challenge;
+    var challengeBuf = _b64uToBuf(pendingChallenge);
+
+    var rpId = location.hostname || 'localhost';
+    var storedId = localStorage.getItem('jbbank_passkey_id');
+    var credential;
+
+    if (storedId) {
+      // 2a. 등록된 Passkey로 인증
+      credential = await navigator.credentials.get({
+        publicKey: {
+          challenge: challengeBuf,
+          rpId: rpId,
+          allowCredentials: [{ type: 'public-key', id: _b64uToBuf(storedId) }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+    } else {
+      // 2b. 최초 등록 (Passkey 생성)
+      credential = await navigator.credentials.create({
+        publicKey: {
+          challenge: challengeBuf,
+          rp: { name: 'JB Bank', id: rpId },
+          user: {
+            id: new TextEncoder().encode('jbbank-demo-user'),
+            name: 'demo@jbbank.com',
+            displayName: '전북은행 사용자'
+          },
+          pubKeyCredParams: [
+            { type: 'public-key', alg: -7 },
+            { type: 'public-key', alg: -257 }
+          ],
+          authenticatorSelection: { userVerification: 'required', residentKey: 'preferred' },
+          timeout: 60000
+        }
+      });
+      localStorage.setItem('jbbank_passkey_id', _bufToB64u(credential.rawId));
+    }
+
+    // 3. 서버에 챌린지 검증
+    await fetch('/api/passkey/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challenge: pendingChallenge })
+    });
+
+    // 4. 완료 상태 표시 후 환전 처리
     $('passkey-state-signing').style.display = 'none';
     $('passkey-state-done').style.display = 'block';
-    setTimeout(function() {
+    setTimeout(_swapComplete, 1200);
+
+  } catch (err) {
+    $('passkey-state-signing').style.display = 'none';
+    $('passkey-state-idle').style.display = 'block';
+    if (err.name !== 'NotAllowedError') {
+      showStatus('m4-swap-status', '서명 오류: ' + (err.message || err.name), false);
       $('passkey-overlay').style.display = 'none';
-      // 실제 환전 완료 처리
-      var val = _swapPendingVal;
-      if (m4SwapDir === 0) {
-        var usdc = (val / M4_RATE).toFixed(4);
-        showStatus('m4-swap-status', '✅ ₩' + Math.round(val).toLocaleString('ko-KR') + ' → ' + usdc + ' USDC 환전 완료', true);
-      } else {
-        var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
-        showStatus('m4-swap-status', '✅ ' + val.toFixed(4) + ' USDC → ₩' + krw + ' 환전 완료', true);
-      }
-      $('m4-swap-input').value = '';
-      $('m4-swap-preview').textContent = '';
-      setTimeout(function() { $('m4-swap-status').className = 'status'; }, 3500);
-    }, 1200);
-  }, 1500);
+    }
+  }
 }
 
 function passkeyCancel() {
