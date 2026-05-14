@@ -730,6 +730,12 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                   <div class="list-item" id="m2-item-4" data-price="0.0025" data-idx="4" onclick="var cb=$('m2-cb-4');cb.checked=!cb.checked;updateM2Btn();" style="cursor:pointer"><input type="checkbox" class="m2-cb" id="m2-cb-4"><span class="m2-check"></span><div class="list-item-info" style="flex:1;margin-left:10px"><span class="list-item-title">기관 자금 동향: ETF 시장 업데이트</span><span class="list-item-price">0.0025 USDC</span></div><span class="chip" id="m2-chip-4">미결제</span></div>
                 </div>
                 <button class="btn" id="m2-run" onclick="runMicropayment()" style="margin-top:12px">전체 결제 실행 (0.030 USDC)</button>
+                <div class="ktx-steps" id="m2-steps" style="display:none;margin-top:10px">
+                  <div class="ktx-step" id="m2-s0"><div class="ktx-step-dot" id="m2-d0">1</div><span>x402 결제 요청</span></div>
+                  <div class="ktx-step" id="m2-s1"><div class="ktx-step-dot" id="m2-d1">2</div><span>USDC 서명 생성</span></div>
+                  <div class="ktx-step" id="m2-s2"><div class="ktx-step-dot" id="m2-d2">3</div><span>Facilitator 검증</span></div>
+                  <div class="ktx-step" id="m2-s3"><div class="ktx-step-dot" id="m2-d3">4</div><span>온체인 정산 완료</span></div>
+                </div>
                 <div class="status" id="m2-status"></div>
               </div>
             </div>
@@ -1487,32 +1493,73 @@ async function runMicropayment() {
     el.classList.remove('done');
     const chip = el.querySelector('.chip');
     chip.textContent = '대기'; chip.style.color = '';
+    chip.style.background = ''; chip.style.color = '';
   });
   btn.disabled = true; btn.textContent = '결제 진행 중...';
 
-  const indices = targets.map(function(el) { return parseInt(el.dataset.idx); });
+  // 스텝 초기화
+  var stepCount = 4;
+  $('m2-steps').style.display = 'flex';
+  for (var si = 0; si < stepCount; si++) {
+    $('m2-d' + si).className = 'ktx-step-dot';
+    $('m2-d' + si).textContent = si + 1;
+    $('m2-s' + si).className = 'ktx-step';
+  }
+
+  var delays = [400, 700, 900, 600];
+
+  async function stepActive(i) {
+    $('m2-d' + i).className = 'ktx-step-dot active';
+    $('m2-s' + i).className = 'ktx-step active';
+    await new Promise(function(r) { setTimeout(r, delays[i]); });
+    $('m2-d' + i).className = 'ktx-step-dot done';
+    $('m2-d' + i).textContent = String.fromCharCode(10003);
+    $('m2-s' + i).className = 'ktx-step done';
+  }
+
+  var indices = targets.map(function(el) { return parseInt(el.dataset.idx); });
 
   try {
-    const res = await fetch('/api/demo/micropayment', {
+    await stepActive(0);
+    await stepActive(1);
+
+    var fetchPromise = fetch('/api/demo/micropayment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ indices: indices }),
     });
-    const d = await res.json();
+
+    await stepActive(2);
+    var res = await fetchPromise;
+    var d = await res.json();
     if (!res.ok) throw new Error(d.error);
-    d.steps.forEach(function(step, i) {
-      const el = targets[i];
-      if (el) { el.classList.add('done'); el.querySelector('.chip').textContent = '결제 완료'; }
+
+    await stepActive(3);
+
+    // 각 항목 상태 업데이트: 결제 완료 → 다운로드 버튼으로 교체
+    targets.forEach(function(el, i) {
+      el.classList.add('done');
+      // onclick 제거 (완료된 항목은 체크 불가)
+      el.onclick = null;
+      el.style.cursor = 'default';
+      var cb = el.querySelector('.m2-cb');
+      if (cb) cb.disabled = true;
+      var chip = el.querySelector('.chip');
+      chip.outerHTML = '<a class="chip chip-dl" href="#" onclick="return false;" style="background:var(--accent);color:#fff;text-decoration:none;font-size:11px;font-weight:600;border-radius:20px;padding:4px 10px;white-space:nowrap">다운로드</a>';
     });
-    const totalUsdc = d.steps.reduce(function(s, x) { return s + parseFloat(x.usdcPrice || '0'); }, 0);
-    showStatus('m2-status', targets.length + '건 결제 완료 · 총 ' + totalUsdc.toFixed(3) + ' USDC', true);
+
+    var totalUsdc = d.steps.reduce(function(s, x) { return s + parseFloat(x.usdcPrice || '0'); }, 0);
+    showStatus('m2-status', targets.length + '건 결제 완료 · 총 ' + totalUsdc.toFixed(4) + ' USDC', true);
+    loadAccount();
   } catch (e) {
     targets.forEach(function(el) {
-      if (el.querySelector('.chip').textContent === '대기') {
-        el.querySelector('.chip').textContent = '결제 실패';
-        el.querySelector('.chip').style.color = 'var(--danger)';
+      var chip = el.querySelector('.chip');
+      if (chip && chip.textContent === '대기') {
+        chip.textContent = '결제 실패';
+        chip.style.color = 'var(--danger)';
       }
     });
+    $('m2-steps').style.display = 'none';
     showStatus('m2-status', '결제 실패: ' + e.message, false);
   } finally {
     btn.disabled = false;
