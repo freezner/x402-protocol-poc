@@ -693,13 +693,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <div id="m1-tx"><div class="empty">거래 내역이 없습니다.</div></div>
             <button id="m1-tx-more" onclick="go('M4')" style="display:none;width:100%;margin-top:10px;padding:9px 0;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:var(--text);font-size:12px;font-weight:600;cursor:pointer">지갑에서 더 보기</button>
           </div>
-          <div class="card">
-            <div style="font-size:15px;font-weight:700;margin-bottom:10px">위임 AI</div>
-            <div class="setting-row"><span>이름</span><span class="chip" id="m1-ai-name">—</span></div>
-            <div class="setting-row"><span>신뢰등급</span><span class="chip" id="m1-ai-trust">—</span></div>
-            <div class="setting-row"><span>자동결제</span><span class="chip" id="m1-ai-auto">—</span></div>
-            <div class="setting-row"><span>만료</span><span class="chip" id="m1-ai-exp">—</span></div>
-          </div>
+
           <button class="btn secondary" onclick="resetDemo()">데모 상태 초기화</button>
           <div class="status" id="m1-status"></div>
         </div>
@@ -1403,10 +1397,6 @@ async function loadAccount() {
       }).join('');
     }
 
-    $('m1-ai-name').textContent  = d.delegatedAi.name;
-    $('m1-ai-trust').textContent = d.delegatedAi.trustGrade;
-    $('m1-ai-auto').textContent  = d.delegatedAi.autoPayment ? 'ON' : 'OFF';
-    $('m1-ai-exp').textContent   = 'D-' + d.delegatedAi.expiresInDays;
   } catch (e) {
     showStatus('m1-status', '조회 실패: ' + e.message, false);
   }
