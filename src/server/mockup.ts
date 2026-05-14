@@ -1027,17 +1027,15 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <div class="setting-row" style="border:none"><span>Facilitator</span><span style="font-size:11px;color:var(--muted)">x402.org</span></div>
           </div>
 
-          <!-- 보안 -->
+          <!-- 온체인 트랜잭션 히스토리 -->
           <div class="card">
-            <div style="font-size:15px;font-weight:700;margin-bottom:12px">보안</div>
-            <div class="setting-row" style="border:none">
-              <div>
-                <div style="font-size:13px;font-weight:600">PassKey</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:2px">생체인식으로 결제 서명을 보호합니다</div>
-              </div>
-              <button class="btn secondary" id="m4-passkey-btn" onclick="registerWalletPasskey()" style="width:auto;padding:8px 14px;font-size:12px;margin:0">등록</button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div style="font-size:15px;font-weight:700">온체인 트랜잭션</div>
+              <button onclick="loadWallet()" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;padding:0">새로고침</button>
             </div>
-            <div class="status" id="m4-passkey-status"></div>
+            <div id="m4-tx-list">
+              <div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>
+            </div>
           </div>
 
           <div class="status" id="m4-copy-status"></div>
@@ -2233,9 +2231,50 @@ async function loadWallet() {
     $('m4-addr').textContent    = addrShort;
     $('m4-usdc').textContent    = usdc;
     $('m4-eth').textContent     = eth;
+
+    // 트랜잭션 히스토리 로드
+    try {
+      const acRes = await fetch('/api/demo/account');
+      const acData = await acRes.json();
+      renderM4TxList(acData.transactions || []);
+    } catch (_) {}
   } catch (e) {
     $('m4-balance').textContent = '조회 실패';
   }
+}
+
+function renderM4TxList(txs) {
+  const list = $('m4-tx-list');
+  if (!txs || txs.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:20px 0;color:var(--muted);font-size:13px">트랜잭션 내역이 없습니다</div>';
+    return;
+  }
+  const categoryIcon = { transport: '🚄', stay: '🏨', food: '🍽️', content: '📄', risk: '🚫' };
+  list.innerHTML = txs.map(function(tx, idx) {
+    var icon = categoryIcon[tx.category] || '💳';
+    var isOk = tx.status === 'approved';
+    var usdcAmt = tx.amountUsdc ? Number(tx.amountUsdc).toFixed(4) + ' USDC' : '';
+    var border = idx < txs.length - 1 ? 'border-bottom:1px solid var(--line);' : '';
+    var basescanHref = m4WalletAddress
+      ? 'https://sepolia.basescan.org/address/' + m4WalletAddress
+      : '#';
+    return (
+      '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;' + border + '">' +
+        '<div style="width:34px;height:34px;border-radius:50%;background:' + (isOk ? '#eef4ff' : '#fff0f0') + ';display:grid;place-items:center;font-size:16px;flex-shrink:0">' + icon + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + tx.merchant + '</div>' +
+          '<div style="font-size:10px;color:var(--muted);margin-top:1px">' + new Date(tx.createdAt).toLocaleString('ko-KR', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>' +
+        '</div>' +
+        '<div style="text-align:right;flex-shrink:0">' +
+          (usdcAmt ? '<div style="font-size:12px;font-weight:700;color:' + (isOk ? 'var(--accent)' : 'var(--danger)') + '">' + (isOk ? '-' : '') + usdcAmt + '</div>' : '') +
+          '<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">' +
+            '<span style="font-size:10px;font-weight:600;color:' + (isOk ? 'var(--success)' : 'var(--danger)') + '">' + (isOk ? '완료' : '차단') + '</span>' +
+            (isOk ? '<a href="' + basescanHref + '" target="_blank" style="font-size:10px;color:var(--muted);text-decoration:none">BaseScan ↗</a>' : '') +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
 }
 
 async function copyAddress() {
