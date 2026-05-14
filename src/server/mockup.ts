@@ -566,6 +566,7 @@ export function getMockupHtml(): string {
       animation: actIn .22s ease;
     }
     @keyframes actIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes passkey-pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.15);opacity:.7} }
     .activity-top      { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
     .activity-agent    { font-size: 12px; font-weight: 700; color: var(--primary); }
     .activity-time     { font-size: 10px; color: var(--muted); }
@@ -639,6 +640,35 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
     <!-- App root: all screens live here -->
     <div id="app">
     <div class="toast" id="toast"></div>
+
+    <!-- Passkey 서명 모달 -->
+    <div id="passkey-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:flex-end;justify-content:center">
+      <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:28px 24px 36px;box-shadow:0 -4px 24px rgba(0,0,0,.12)">
+        <div style="width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:0 auto 24px"></div>
+        <div style="text-align:center;margin-bottom:20px">
+          <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px">환전 서명 요청</div>
+          <div id="passkey-desc" style="font-size:13px;color:#64748b"></div>
+        </div>
+        <div style="background:#f8fafc;border-radius:14px;padding:14px 16px;margin-bottom:22px">
+          <div id="passkey-detail" style="font-size:13px;color:#334155;line-height:1.7"></div>
+        </div>
+        <!-- 서명 상태 영역 -->
+        <div id="passkey-state-idle" style="text-align:center">
+          <div style="font-size:52px;margin-bottom:14px;line-height:1">🔐</div>
+          <div style="font-size:13px;color:#64748b;margin-bottom:20px">등록된 Passkey로 서명합니다</div>
+          <button class="btn" onclick="passkeySign()" style="width:100%;font-size:14px;font-weight:700">Touch ID / Face ID로 서명</button>
+          <button onclick="passkeyCancel()" style="margin-top:10px;width:100%;font-size:13px;color:var(--muted);background:none;border:none;cursor:pointer;padding:6px">취소</button>
+        </div>
+        <div id="passkey-state-signing" style="display:none;text-align:center">
+          <div style="font-size:52px;margin-bottom:14px;animation:passkey-pulse 1s ease-in-out infinite">👆</div>
+          <div style="font-size:13px;color:var(--primary);font-weight:600">생체 인증 중...</div>
+        </div>
+        <div id="passkey-state-done" style="display:none;text-align:center">
+          <div style="font-size:52px;margin-bottom:14px">✅</div>
+          <div style="font-size:13px;color:var(--success);font-weight:600">서명 완료 — 환전 처리 중...</div>
+        </div>
+      </div>
+    </div>
 
       <!-- M0 · Intro -->
       <div class="screen active" id="M0">
@@ -2477,22 +2507,67 @@ function updateSwapPreview() {
   }
 }
 
+var _swapPendingVal = 0;
+
 function runSwap() {
   var val = parseFloat($('m4-swap-input').value);
   if (!val || val <= 0) {
     showStatus('m4-swap-status', '금액을 입력해주세요.', false);
     return;
   }
+  _swapPendingVal = val;
+  // 모달 내용 채우기
   if (m4SwapDir === 0) {
     var usdc = (val / M4_RATE).toFixed(4);
-    showStatus('m4-swap-status', '✅ ₩' + Math.round(val).toLocaleString('ko-KR') + ' → ' + usdc + ' USDC 환전 완료 (데모)', true);
+    $('passkey-desc').textContent = 'KRW → USDC 환전';
+    $('passkey-detail').innerHTML =
+      '<b>출금</b> ₩' + Math.round(val).toLocaleString('ko-KR') + ' (전북은행 계좌)<br>' +
+      '<b>입금</b> ' + usdc + ' USDC (Base Sepolia)<br>' +
+      '<b>환율</b> ' + M4_RATE + ' KRW/USD';
   } else {
     var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
-    showStatus('m4-swap-status', '✅ ' + val.toFixed(4) + ' USDC → ₩' + krw + ' 환전 완료 (데모)', true);
+    $('passkey-desc').textContent = 'USDC → KRW 환전';
+    $('passkey-detail').innerHTML =
+      '<b>출금</b> ' + val.toFixed(4) + ' USDC (Base Sepolia)<br>' +
+      '<b>입금</b> ₩' + krw + ' (전북은행 계좌)<br>' +
+      '<b>환율</b> ' + M4_RATE + ' KRW/USD';
   }
-  $('m4-swap-input').value = '';
-  $('m4-swap-preview').textContent = '';
-  setTimeout(function() { $('m4-swap-status').className = 'status'; }, 3000);
+  // 상태 초기화
+  $('passkey-state-idle').style.display = 'block';
+  $('passkey-state-signing').style.display = 'none';
+  $('passkey-state-done').style.display = 'none';
+  // 모달 열기
+  var ov = $('passkey-overlay');
+  ov.style.display = 'flex';
+  requestAnimationFrame(function() { ov.style.opacity = '1'; });
+}
+
+function passkeySign() {
+  $('passkey-state-idle').style.display = 'none';
+  $('passkey-state-signing').style.display = 'block';
+  setTimeout(function() {
+    $('passkey-state-signing').style.display = 'none';
+    $('passkey-state-done').style.display = 'block';
+    setTimeout(function() {
+      $('passkey-overlay').style.display = 'none';
+      // 실제 환전 완료 처리
+      var val = _swapPendingVal;
+      if (m4SwapDir === 0) {
+        var usdc = (val / M4_RATE).toFixed(4);
+        showStatus('m4-swap-status', '✅ ₩' + Math.round(val).toLocaleString('ko-KR') + ' → ' + usdc + ' USDC 환전 완료', true);
+      } else {
+        var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
+        showStatus('m4-swap-status', '✅ ' + val.toFixed(4) + ' USDC → ₩' + krw + ' 환전 완료', true);
+      }
+      $('m4-swap-input').value = '';
+      $('m4-swap-preview').textContent = '';
+      setTimeout(function() { $('m4-swap-status').className = 'status'; }, 3500);
+    }, 1200);
+  }, 1500);
+}
+
+function passkeyCancel() {
+  $('passkey-overlay').style.display = 'none';
 }
 
 function showToast(msg) {
