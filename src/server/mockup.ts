@@ -821,7 +821,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
                   에이전트 결제
                 </div>
-                <div class="accordion-hd-sub">KTX 열차 예약 · ClaudeAssist 자율 처리</div>
+                <div class="accordion-hd-sub">KTX 열차 예약 · JB AI Assist 자율 처리</div>
               </div>
               <svg class="accordion-chevron" id="acc-cv-1" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
@@ -835,7 +835,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
                     <div>
                       <div class="ktx-agent-label">
                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>
-                        ClaudeAssist
+                        JB AI Assist
                       </div>
                       <div class="ktx-chat-bubble" id="ktx-greeting-bubble"><span id="ktx-greeting-text"></span><span class="ktx-cursor" id="ktx-greeting-cursor">▍</span></div>
                     </div>
@@ -1236,7 +1236,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
           <!-- Step 2: PassKey 승인 -->
           <div class="step-panel" id="sp-1">
             <div class="step-title">에이전트 지갑 생성</div>
-            <div class="step-desc">전북은행이 ClaudeAssist 전용 서브월렛을 생성합니다. PassKey로 생성을 승인해주세요.</div>
+            <div class="step-desc">전북은행이 JB AI Assist 전용 서브월렛을 생성합니다. PassKey로 생성을 승인해주세요.</div>
             <div class="card" style="background:#f8fbff;margin-bottom:0">
               <div class="setting-row" style="border:none;padding:6px 0">
                 <span style="font-size:12px;color:var(--muted)">생성될 주소</span>
@@ -1253,7 +1253,7 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
           <!-- Step 3: 위임 한도 -->
           <div class="step-panel" id="sp-2">
             <div class="step-title">위임 한도 설정</div>
-            <div class="step-desc">ClaudeAssist가 자율 결제할 수 있는 한도와 허용 카테고리를 설정합니다.</div>
+            <div class="step-desc">JB AI Assist가 자율 결제할 수 있는 한도와 허용 카테고리를 설정합니다.</div>
             <div class="card" style="margin-bottom:12px">
               <div class="setting-row">
                 <span>요청당 최대</span>
@@ -1752,7 +1752,7 @@ function ktxAppendBubble(role, text) {
       '<div>' +
         '<div class="ktx-agent-label">' +
           '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>' +
-          'ClaudeAssist' +
+          'JB AI Assist' +
         '</div>' +
         '<div class="ktx-chat-bubble">' + ktxMd(text) + '</div>' +
       '</div>';
@@ -1781,7 +1781,7 @@ async function runKtxSearch() {
   const loadingRow = document.createElement('div');
   loadingRow.className = 'ktx-bubble-row agent';
   loadingRow.id = 'ktx-loading';
-  loadingRow.innerHTML = '<div><div class="ktx-agent-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>ClaudeAssist</div><div class="ktx-chat-bubble" style="color:var(--muted)">···</div></div>';
+  loadingRow.innerHTML = '<div><div class="ktx-agent-label"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2a5 5 0 0 1 5 5c0 2-.8 3.8-2 5"/><path d="M12 2a5 5 0 0 0-5 5c0 2 .8 3.8 2 5"/><path d="M8.5 12c0 2 .8 3.8 2 4.8"/><path d="M15.5 12c0 2-.8 3.8-2 4.8"/><path d="M11 21.8c.3.1.6.2 1 .2s.7-.1 1-.2"/></svg>JB AI Assist</div><div class="ktx-chat-bubble" style="color:var(--muted)">···</div></div>';
   $('ktx-chat-log').appendChild(loadingRow);
   $('ktx-chat-log').scrollTop = $('ktx-chat-log').scrollHeight;
 
@@ -2144,7 +2144,7 @@ function renderM2mAgentSection() {
         '<div class="m2m-empty-icon">🤖</div>' +
         '<div class="m2m-empty-title">등록된 에이전트가 없습니다</div>' +
         '<div class="m2m-empty-desc">AI 결제 에이전트를 등록하면<br>사람 개입 없이 자율 결제가 가능합니다</div>' +
-        '<button class="btn" onclick="openRegister()">+ ClaudeAssist 등록</button>' +
+        '<button class="btn" onclick="openRegister()">+ JB AI Assist 등록</button>' +
       '</div></div>';
     return;
   }
@@ -2279,8 +2279,8 @@ async function passkeyApprove() {
         rp: { name: '전북은행', id: location.hostname },
         user: {
           id: new TextEncoder().encode('claude-agent-01'),
-          name: 'ClaudeAssist',
-          displayName: 'ClaudeAssist Agent',
+          name: 'JB AI Assist',
+          displayName: 'JB AI Assist Agent',
         },
         pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
         authenticatorSelection: { userVerification: 'required' },
@@ -2304,7 +2304,7 @@ async function completeRegistration() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        agentName: 'ClaudeAssist',
+        agentName: 'JB AI Assist',
         address: fullAddr,
         trustGrade: 'A',
         perRequestLimitUsdc: perReq,
@@ -2314,7 +2314,7 @@ async function completeRegistration() {
     const d = await res.json();
     if (!res.ok) throw new Error(d.error);
 
-    m2mAgent = { name: 'ClaudeAssist', address: fullAddr, trustGrade: 'A', txCount: 0 };
+    m2mAgent = { name: 'JB AI Assist', address: fullAddr, trustGrade: 'A', txCount: 0 };
     m2mSessionSpent = 0;
     $('s-m2m-req').value  = perReq;
     $('s-m2m-sess').value = session;
@@ -2340,7 +2340,7 @@ async function runM2mAgent() {
       m2mSessionSpent += spent;
       m2mAgent.txCount += 1;
       m2mActivities.unshift({
-        agent:    'ClaudeAssist',
+        agent:    'JB AI Assist',
         endpoint: step.endpoint,
         amount:   step.usdcPrice,
         ok:       true,
@@ -2353,7 +2353,7 @@ async function runM2mAgent() {
     showStatus('m2m-run-status', d.steps.length + '건 자율 결제 완료 · ' + total.toFixed(4) + ' USDC', true);
   } catch (e) {
     m2mActivities.unshift({
-      agent: 'ClaudeAssist', endpoint: '—', amount: '0', ok: false,
+      agent: 'JB AI Assist', endpoint: '—', amount: '0', ok: false,
       error: e.message,
       time: new Date().toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit', second:'2-digit' }),
     });

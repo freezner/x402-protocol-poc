@@ -1611,7 +1611,7 @@ async function runPaidScenario(
       amountKrw: step.amountKrw,
       amountUsdc: step.usdcPrice,
       endpoint: step.endpoint,
-      ai: "ClaudeAssist",
+      ai: "JB AI Assist",
       detail: step.detail,
     });
     results.push({
@@ -1805,7 +1805,7 @@ const M2M_STEPS = [
   {
     endpoint: "/api/premium/trip/railgo",
     usdcPrice: "0.01",
-    merchant: "ClaudeAssist Auto",
+    merchant: "JB AI Assist Auto",
     category: "transport" as const,
     amountKrw: 0,
     detail: "M2M 자율결제 · 출장 교통 조회",
@@ -1813,7 +1813,7 @@ const M2M_STEPS = [
   {
     endpoint: "/api/premium/content/brief-1",
     usdcPrice: "0.005",
-    merchant: "ClaudeAssist Auto",
+    merchant: "JB AI Assist Auto",
     category: "content" as const,
     amountKrw: 0,
     detail: "M2M 자율결제 · 콘텐츠 브리프 조회",
@@ -1840,7 +1840,7 @@ router.post("/api/demo/ktx-search", async (req, res) => {
   };
   const today = new Date().toISOString().slice(0, 10);
 
-  const SYSTEM = `당신은 코레일 KTX 예약 AI 어시스턴트 ClaudeAssist입니다.
+  const SYSTEM = `당신은 코레일 KTX 예약 AI 어시스턴트 JB AI Assist입니다.
 오늘 날짜: ${today}
 
 [목표] 아래 5가지 정보를 대화로 수집한 뒤 열차를 추천합니다.
@@ -1909,7 +1909,7 @@ router.post("/api/demo/ktx-reserve", async (req, res) => {
       amountKrw: priceKrw ?? 59800,
       amountUsdc: priceUsdc ?? "0.01",
       endpoint: "/api/premium/trip/railgo",
-      ai: "ClaudeAssist",
+      ai: "JB AI Assist",
       detail,
     });
     res.json({ ok: true, elapsedMs: paid.elapsedMs, detail });
@@ -1940,7 +1940,7 @@ router.post("/api/demo/sign-and-pay", async (req, res) => {
       category: body.category,
       amountKrw: body.amountKrw,
       endpoint: ep,
-      ai: "ClaudeAssist",
+      ai: "JB AI Assist",
       detail: body.detail,
     });
     res.json({ ok: true, transaction: tx, account: demoStateStore.getAccount(), elapsedMs: paid.elapsedMs });

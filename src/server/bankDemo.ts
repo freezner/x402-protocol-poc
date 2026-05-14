@@ -777,7 +777,7 @@ export function getBankDemoHtml(): string {
             <p class="screen-subtitle">은행이 검증한 AI 제공사 목록입니다.</p>
             <div class="stack">
               <div class="ai-badge">
-                <div class="ai-row"><strong>ClaudeAssist</strong><span class="setting-chip">신뢰 A</span></div>
+                <div class="ai-row"><strong>JB AI Assist</strong><span class="setting-chip">신뢰 A</span></div>
                 <p class="list-note" style="margin-top:8px">Anthropic 제휴 · 자동 결제 활성</p>
               </div>
               <div class="ai-badge">
@@ -799,7 +799,7 @@ export function getBankDemoHtml(): string {
               <div class="card" style="width:100%;text-align:left">
                 <div class="transaction-row"><span class="muted">계좌번호</span><strong>1002-19-402-0001</strong></div>
                 <div class="transaction-row"><span class="muted">월 한도</span><strong>₩1,000,000</strong></div>
-                <div class="transaction-row"><span class="muted">위임 AI</span><strong>ClaudeAssist 1개</strong></div>
+                <div class="transaction-row"><span class="muted">위임 AI</span><strong>JB AI Assist 1개</strong></div>
                 <div class="transaction-row"><span class="muted">만료</span><strong>3개월</strong></div>
               </div>
               <p class="screen-subtitle">기존 통장에서 ₩1,000,000 자동 충전됨</p>
@@ -840,12 +840,12 @@ export function getBankDemoHtml(): string {
                 </div>
               </div>
               <div class="ai-badge">
-                <div class="ai-row"><strong>ClaudeAssist</strong><span class="setting-chip">자동 결제</span></div>
+                <div class="ai-row"><strong>JB AI Assist</strong><span class="setting-chip">자동 결제</span></div>
                 <p class="list-note" style="margin-top:8px">신뢰등급 A · 만료 D-90 · 출장 예약 워크플로우 사용 중</p>
               </div>
               <div class="notif" data-goto="S7" style="cursor:pointer">
                 <div>🔔</div>
-                <div>ClaudeAssist가 결제를 요청했습니다.<br/><span class="tiny">탭해서 결제 요청 화면 보기</span></div>
+                <div>JB AI Assist가 결제를 요청했습니다.<br/><span class="tiny">탭해서 결제 요청 화면 보기</span></div>
               </div>
               <div class="card">
                 <div class="section-title" style="font-size:15px">최근 거래</div>
@@ -874,7 +874,7 @@ export function getBankDemoHtml(): string {
             <div class="stack">
               <div class="card">
                 <div class="tiny muted">외부 AI 비서 화면</div>
-                <div class="screen-title" style="font-size:22px;margin-top:6px">ClaudeAssist</div>
+                <div class="screen-title" style="font-size:22px;margin-top:6px">JB AI Assist</div>
                 <p class="list-note" style="margin-top:12px">"다음 주 화요일 대구 당일 출장 잡아줘. 한도 60만 원."</p>
               </div>
               <div class="card">
@@ -927,7 +927,7 @@ export function getBankDemoHtml(): string {
               <div class="card balance-card">
                 <div class="balance-label">AI 에이전트 계좌</div>
                 <div class="balance-amount" id="receipt-balance">₩717,000</div>
-                <div class="meta-text">ClaudeAssist가 4건 결제 · 총 ₩283,000</div>
+                <div class="meta-text">JB AI Assist가 4건 결제 · 총 ₩283,000</div>
               </div>
               <div class="card">
                 <div class="section-title" style="font-size:15px">최근 거래</div>
@@ -947,7 +947,7 @@ export function getBankDemoHtml(): string {
             <div class="topbar"><div><strong>이상거래 감지</strong></div><div>S10</div></div>
             <div class="alert-modal">
               <div class="danger-title">이상거래 감지</div>
-              <div class="timeline-copy">ClaudeAssist가 해외 IP에서 ₩980,000 결제를 시도했습니다.</div>
+              <div class="timeline-copy">JB AI Assist가 해외 IP에서 ₩980,000 결제를 시도했습니다.</div>
               <div class="alert-reasons">
                 <div>평소 패턴과 다른 시간</div>
                 <div>등록되지 않은 가맹점</div>
@@ -1193,7 +1193,7 @@ export function getBankDemoHtml(): string {
                 <div style="margin-top:12px" id="s16-agents">
                   <div class="agent-chip">
                     <div>
-                      <div style="font-weight:600;font-size:13px">ClaudeAssist</div>
+                      <div style="font-weight:600;font-size:13px">JB AI Assist</div>
                       <div class="tiny muted">0xAI01...c821 · Anthropic 제휴</div>
                     </div>
                     <span class="badge-x402">신뢰 A</span>

@@ -93,7 +93,7 @@ const initialState = (): DemoAccountState => ({
     content: 0,
   },
   delegatedAi: {
-    name: "ClaudeAssist",
+    name: "JB AI Assist",
     trustGrade: "A",
     autoPayment: true,
     expiresInDays: 90,
