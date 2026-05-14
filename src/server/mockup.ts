@@ -694,6 +694,43 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             <button id="m1-tx-more" onclick="go('M4')" style="display:none;width:100%;margin-top:10px;padding:9px 0;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:var(--text);font-size:12px;font-weight:600;cursor:pointer">지갑에서 더 보기</button>
           </div>
 
+          <!-- AI 결제 실적 요약 -->
+          <div class="card" id="m1-ai-summary-card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:12px">AI 결제 실적</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+              <div style="background:#f0f5ff;border-radius:12px;padding:12px 10px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:var(--accent)" id="m1-ai-count">0</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">자율 결제</div>
+              </div>
+              <div style="background:#f0fff8;border-radius:12px;padding:12px 10px;text-align:center">
+                <div style="font-size:15px;font-weight:800;color:#0f6a3e;line-height:1.3" id="m1-ai-usdc">0.0000</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">USDC 결제</div>
+              </div>
+              <div style="background:#fff5f5;border-radius:12px;padding:12px 10px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:var(--danger)" id="m1-ai-blocked">0</div>
+                <div style="font-size:10px;color:var(--muted);margin-top:2px">차단</div>
+              </div>
+            </div>
+            <div id="m1-ai-prevented" style="display:none;margin-top:10px;background:#fff5f5;border-radius:10px;padding:8px 12px;font-size:11px;color:var(--danger);font-weight:600"></div>
+          </div>
+
+          <!-- USDC 잔고 알림 -->
+          <div class="card" id="m1-usdc-alert-card" style="display:none">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="font-size:22px;flex-shrink:0">⚠️</div>
+              <div style="flex:1">
+                <div style="font-size:13px;font-weight:700;color:var(--danger);margin-bottom:4px">USDC 잔고 부족</div>
+                <div style="font-size:12px;color:var(--muted);line-height:1.5">AI 자율 결제를 위한 잔고가 부족합니다.<br>Circle Faucet에서 테스트넷 USDC를 충전해주세요.</div>
+                <a href="https://faucet.circle.com" target="_blank" rel="noopener"
+                  style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;font-size:12px;font-weight:700;color:#fff;background:var(--primary);border-radius:8px;padding:7px 14px;text-decoration:none">
+                  Circle Faucet 충전
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+              </div>
+            </div>
+            <div id="m1-usdc-balance-now" style="margin-top:10px;font-size:11px;color:var(--muted)"></div>
+          </div>
+
           <button class="btn secondary" onclick="resetDemo()">데모 상태 초기화</button>
           <div class="status" id="m1-status"></div>
         </div>
@@ -1397,9 +1434,39 @@ async function loadAccount() {
       }).join('');
     }
 
+    // ── AI 결제 실적 요약 ──
+    const approved = d.transactions.filter(t => t.status === 'approved');
+    const totalUsdc = approved.reduce((s, t) => s + parseFloat(t.amountUsdc || '0'), 0);
+    $('m1-ai-count').textContent   = approved.length;
+    $('m1-ai-usdc').textContent    = totalUsdc.toFixed(4);
+    $('m1-ai-blocked').textContent = d.blockedCount || 0;
+    const prevEl = $('m1-ai-prevented');
+    if (d.preventedLossKrw > 0) {
+      prevEl.style.display = 'block';
+      prevEl.textContent = '🛡️ 이상거래 차단으로 ₩' + Number(d.preventedLossKrw).toLocaleString('ko-KR') + ' 손실 방지';
+    } else {
+      prevEl.style.display = 'none';
+    }
+
   } catch (e) {
     showStatus('m1-status', '조회 실패: ' + e.message, false);
   }
+
+  // ── USDC 잔고 알림 (별도 조회) ──
+  try {
+    const balRes = await fetch('/api/free/balances');
+    if (balRes.ok) {
+      const bal = await balRes.json();
+      const agent = bal.wallets?.find(w => w.role === 'payer');
+      if (agent) {
+        const usdc = parseFloat(agent.usdc);
+        const alertCard = $('m1-usdc-alert-card');
+        const balNow = $('m1-usdc-balance-now');
+        alertCard.style.display = usdc < 0.05 ? 'block' : 'none';
+        if (balNow) balNow.textContent = '현재 잔고: ' + usdc.toFixed(4) + ' USDC (권장 최소: 0.05 USDC)';
+      }
+    }
+  } catch (_) {}
 }
 
 async function resetDemo() {
