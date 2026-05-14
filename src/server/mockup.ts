@@ -689,8 +689,9 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             </div>
           </div>
           <div class="card">
-            <div style="font-size:15px;font-weight:700;margin-bottom:10px">최근 거래</div>
+            <div style="font-size:15px;font-weight:700;margin-bottom:10px">최근 지갑 결제</div>
             <div id="m1-tx"><div class="empty">거래 내역이 없습니다.</div></div>
+            <button id="m1-tx-more" onclick="go('M4')" style="display:none;width:100%;margin-top:10px;padding:9px 0;border:1px solid var(--line);border-radius:10px;background:#f7f9fc;color:var(--text);font-size:12px;font-weight:600;cursor:pointer">지갑에서 더 보기</button>
           </div>
           <div class="card">
             <div style="font-size:15px;font-weight:700;margin-bottom:10px">위임 AI</div>
@@ -1385,7 +1386,9 @@ async function loadAccount() {
     if (!d.transactions.length) {
       txEl.innerHTML = '<div class="empty">거래 내역이 없습니다.</div>';
     } else {
-      txEl.innerHTML = d.transactions.slice(0, 10).map(t => {
+      var m1More = $('m1-tx-more');
+      if (m1More) m1More.style.display = d.transactions.length > 5 ? 'block' : 'none';
+      txEl.innerHTML = d.transactions.slice(0, 5).map(t => {
         const sign = t.status === 'approved' ? '-' : '';
         const cls  = t.status === 'approved' ? 'minus' : 'plus';
         // amountUsdc가 있으면 실제 온체인 금액(USDC)을, 없으면 원화로 표시
