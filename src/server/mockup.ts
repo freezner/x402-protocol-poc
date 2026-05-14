@@ -2336,7 +2336,7 @@ function makeTxRow(tx, showBorder) {
       '<div style="text-align:right;flex-shrink:0">' +
         (usdcAmt ? '<div style="font-size:12px;font-weight:700;color:' + (isOk ? 'var(--accent)' : 'var(--danger)') + '">' + (isOk ? '-' : '') + usdcAmt + '</div>' : '') +
         '<div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px">' +
-          '<span style="font-size:10px;font-weight:600;color:' + (isOk ? 'var(--success)' : 'var(--danger)') + '">' + (isOk ? '완료' : '차단') + '</span>' +
+          (isOk ? '' : '<span style="font-size:10px;font-weight:600;color:var(--danger)">차단</span>') +
           (isOk ? '<a href="' + basescanHref + '" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:var(--accent);text-decoration:none;background:#eef4ff;border:1px solid #c5d9f7;border-radius:6px;padding:3px 7px;margin-left:4px">BaseScan<svg width=\"9\" height=\"9\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\"><path d=\"M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6\"/><polyline points=\"15 3 21 3 21 9\"/><line x1=\"10\" y1=\"14\" x2=\"21\" y2=\"3\"/></svg></a>' : '') +
         '</div>' +
       '</div>' +
@@ -2384,11 +2384,11 @@ function renderM4TxList(txs) {
     return;
   }
 
-  // 스크롤 컨테이너(.screen) 기준으로 IntersectionObserver 설정
-  var screen = document.querySelector('#M4 .screen-inner') || document.querySelector('#M4');
+  // #M4(.screen)이 실제 스크롤 컨테이너 — root로 지정
+  var scrollRoot = document.getElementById('M4');
   m4TxObserver = new IntersectionObserver(function(entries) {
     if (entries[0].isIntersecting) m4AppendTxPage();
-  }, { root: screen ? screen.parentElement : null, threshold: 0.1 });
+  }, { root: scrollRoot, rootMargin: '0px 0px 60px 0px', threshold: 0 });
 
   m4AppendTxPage();
 }
