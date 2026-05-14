@@ -2360,6 +2360,7 @@ function m4LoadMore() {
   if (remaining <= 0) {
     moreBtn.style.display = 'none';
   } else {
+    moreBtn.style.display = 'block';
     moreBtn.textContent = '더보기 (' + remaining + '건 남음)';
   }
 }
