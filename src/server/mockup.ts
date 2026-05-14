@@ -678,6 +678,16 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
     <div class="toast" id="toast"></div>
 
     <!-- Passkey 서명 모달 -->
+    <!-- 결제 에러 모달 -->
+    <div id="err-modal-overlay" onclick="hideErrModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9100;align-items:center;justify-content:center">
+      <div onclick="event.stopPropagation()" style="background:#fff;border-radius:20px;width:calc(100% - 48px);max-width:340px;padding:28px 24px 22px;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center">
+        <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+        <div style="font-size:15px;font-weight:700;color:#1e293b;margin-bottom:10px">결제 오류</div>
+        <div id="err-modal-msg" style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;word-break:keep-all"></div>
+        <button onclick="hideErrModal()" class="btn" style="width:100%;font-size:14px">확인</button>
+      </div>
+    </div>
+
     <div id="passkey-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9000;align-items:flex-end;justify-content:center">
       <div style="background:#fff;border-radius:24px 24px 0 0;width:100%;max-width:430px;padding:28px 24px 36px;box-shadow:0 -4px 24px rgba(0,0,0,.12)">
         <div style="width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:0 auto 24px"></div>
@@ -1865,7 +1875,8 @@ async function runMicropayment() {
       }
     });
     $('m2-steps').style.display = 'none';
-    showStatus('m2-status', '결제 실패: ' + e.message, false);
+    showStatus('m2-status', '', false);
+    showErrModal(e.message);
   } finally {
     btn.disabled = false;
     updateM2Btn();
@@ -1879,8 +1890,9 @@ let ktxReservations = [];  // {role, content} — Claude API 히스토리
 
 function ktxPayErr(msg) {
   const el = $('ktx-pay-err');
-  el.textContent = msg ? '⚠ ' + msg : '';
-  el.style.display = msg ? 'block' : 'none';
+  el.textContent = '';
+  el.style.display = 'none';
+  if (msg) showErrModal(msg);
 }
 function ktxSearchErr(msg) {
   const el = $('ktx-search-err');
@@ -2804,6 +2816,20 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+function showErrModal(raw) {
+  // "HTTP 402 /api/...: 실제 메시지" 형식에서 사람이 읽기 좋은 부분만 추출
+  var msg = raw || '알 수 없는 오류가 발생했습니다.';
+  var colonIdx = msg.indexOf(': ');
+  if (colonIdx !== -1 && msg.startsWith('HTTP ')) msg = msg.slice(colonIdx + 2);
+  $('err-modal-msg').textContent = msg;
+  var ov = $('err-modal-overlay');
+  ov.style.display = 'flex';
+}
+
+function hideErrModal() {
+  $('err-modal-overlay').style.display = 'none';
 }
 
 function toggleM4Acc(idx) {
