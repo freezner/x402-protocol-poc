@@ -1706,13 +1706,13 @@ function renderKtxHistList() {
           // 열차번호 + 기차정보 버튼
           '<div class="ktx-ticket-train-row">' +
             '<span class="ktx-ticket-trainno">' + (r.trainNo || 'KTX') + '</span>' +
-            '<button class="ktx-ticket-info-btn" onclick="showToast(\'기차정보 (데모)\')">⏱ 기차정보</button>' +
+            '<button class="ktx-ticket-info-btn" onclick="showToast(&apos;기차정보 (데모)&apos;)">⏱ 기차정보</button>' +
           '</div>' +
 
           // 인원 + 승차권 영수증
           '<div class="ktx-ticket-pax-row">' +
             '<span class="ktx-ticket-pax">어른 <span class="ktx-ticket-pax-count">' + pax + '</span></span>' +
-            '<button class="ktx-ticket-receipt" onclick="showToast(\'영수증 출력 (데모)\')">승차권 영수증</button>' +
+            '<button class="ktx-ticket-receipt" onclick="showToast(&apos;영수증 출력 (데모)&apos;)">승차권 영수증</button>' +
           '</div>' +
 
           // 테이블 헤더
@@ -1747,7 +1747,7 @@ function renderKtxHistList() {
           '<div class="ktx-ticket-usdc">' + usdcAmt + ' USDC &nbsp;(₩' + krwAmt + ')</div>' +
 
           // 반환 버튼
-          '<button class="ktx-ticket-refund-btn" onclick="showToast(\'반환 처리는 지원되지 않습니다\')">승차권 반환</button>' +
+          '<button class="ktx-ticket-refund-btn" onclick="showToast(&apos;반환 처리는 지원되지 않습니다&apos;)">승차권 반환</button>' +
 
           // 결제일시
           '<div class="ktx-ticket-paydate">결제일시 : ' + r.reservedAt + '</div>' +
