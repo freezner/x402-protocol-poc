@@ -1008,19 +1008,57 @@ ${JBBANK_LOGO_SRC ? `<img src="${JBBANK_LOGO_SRC}" style="position:fixed;bottom:
             </div>
             <div class="accordion-body open" id="m4-acc-bd-0">
               <div class="accordion-inner">
+                <!-- 전북은행 KRW -->
                 <div class="setting-row">
                   <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">$</div>
-                    <div><div style="font-size:13px;font-weight:600">USD Coin</div><div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div></div>
+                    <div style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:#004898;display:grid;place-items:center;flex-shrink:0">
+                      <span style="color:#fff;font-size:9px;font-weight:800;line-height:1">JB</span>
+                    </div>
+                    <div>
+                      <div style="font-size:13px;font-weight:600">전북은행</div>
+                      <div style="font-size:11px;color:var(--muted)">입출금 · 데모 계좌</div>
+                    </div>
                   </div>
-                  <div style="text-align:right"><div style="font-size:14px;font-weight:700" id="m4-usdc">—</div><div style="font-size:11px;color:var(--muted)">USDC</div></div>
+                  <div style="text-align:right">
+                    <div style="font-size:14px;font-weight:700" id="m4-krw">—</div>
+                    <div style="font-size:11px;color:var(--muted)">KRW</div>
+                  </div>
                 </div>
+                <!-- USDC (서브월렛) -->
                 <div class="setting-row" style="border:none">
                   <div style="display:flex;align-items:center;gap:10px">
-                    <div style="width:32px;height:32px;border-radius:50%;background:#627eea;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800">Ξ</div>
-                    <div><div style="font-size:13px;font-weight:600">Ethereum</div><div style="font-size:11px;color:var(--muted)">ETH · 가스비</div></div>
+                    <div style="width:32px;height:32px;border-radius:50%;background:#2775ca;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800;flex-shrink:0">$</div>
+                    <div>
+                      <div style="font-size:13px;font-weight:600">AI 서브월렛</div>
+                      <div style="font-size:11px;color:var(--muted)">USDC · Base Sepolia</div>
+                    </div>
                   </div>
-                  <div style="text-align:right"><div style="font-size:14px;font-weight:700" id="m4-eth">—</div><div style="font-size:11px;color:var(--muted)">ETH</div></div>
+                  <div style="text-align:right">
+                    <div style="font-size:14px;font-weight:700" id="m4-usdc">—</div>
+                    <div style="font-size:11px;color:var(--muted)">USDC</div>
+                  </div>
+                </div>
+
+                <!-- 환전 UI -->
+                <div style="margin-top:14px;border-top:1px solid var(--line);padding-top:14px">
+                  <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">환전</div>
+                  <!-- 방향 탭 -->
+                  <div style="display:flex;background:#f0f4f9;border-radius:10px;padding:3px;margin-bottom:12px">
+                    <button id="m4-swap-tab-0" onclick="setSwapDir(0)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:var(--primary);color:#fff;transition:all .2s">KRW → USDC</button>
+                    <button id="m4-swap-tab-1" onclick="setSwapDir(1)" style="flex:1;font-size:12px;font-weight:600;border:none;cursor:pointer;border-radius:8px;padding:7px 0;background:transparent;color:var(--muted);transition:all .2s">USDC → KRW</button>
+                  </div>
+                  <!-- 입력 -->
+                  <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+                    <div style="flex:1;position:relative">
+                      <input id="m4-swap-input" type="number" placeholder="0" min="0"
+                        oninput="updateSwapPreview()"
+                        style="width:100%;box-sizing:border-box;border:1.5px solid var(--line);border-radius:10px;padding:10px 48px 10px 12px;font-size:15px;font-weight:700;color:var(--text);background:#f7f9fc;outline:none">
+                      <span id="m4-swap-unit" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:600;color:var(--muted)">KRW</span>
+                    </div>
+                  </div>
+                  <div id="m4-swap-preview" style="font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
+                  <button class="btn" onclick="runSwap()" style="width:100%;font-size:13px">환전 실행</button>
+                  <div class="status" id="m4-swap-status" style="margin-top:8px"></div>
                 </div>
               </div>
             </div>
@@ -2250,7 +2288,15 @@ async function loadWallet() {
     $('m4-balance').textContent = usdc + ' USDC';
     $('m4-addr').textContent    = addrShort;
     $('m4-usdc').textContent    = usdc;
-    $('m4-eth').textContent     = eth;
+
+    // KRW 잔고 (demoState)
+    try {
+      const acRes = await fetch('/api/demo/account');
+      if (acRes.ok) {
+        const ac = await acRes.json();
+        $('m4-krw').textContent = Number(ac.balanceKrw).toLocaleString('ko-KR');
+      }
+    } catch (_) {}
 
     // 트랜잭션 히스토리 로드
     try {
@@ -2304,6 +2350,52 @@ async function copyAddress() {
   } catch {
     showToast(m4WalletAddress);
   }
+}
+
+var m4SwapDir = 0; // 0: KRW→USDC, 1: USDC→KRW
+var M4_RATE = 1380; // KRW per USD
+
+function setSwapDir(dir) {
+  m4SwapDir = dir;
+  $('m4-swap-tab-0').style.background = dir === 0 ? 'var(--primary)' : 'transparent';
+  $('m4-swap-tab-0').style.color      = dir === 0 ? '#fff' : 'var(--muted)';
+  $('m4-swap-tab-1').style.background = dir === 1 ? 'var(--primary)' : 'transparent';
+  $('m4-swap-tab-1').style.color      = dir === 1 ? '#fff' : 'var(--muted)';
+  $('m4-swap-unit').textContent = dir === 0 ? 'KRW' : 'USDC';
+  $('m4-swap-input').value = '';
+  $('m4-swap-preview').textContent = '';
+  $('m4-swap-status').className = 'status';
+}
+
+function updateSwapPreview() {
+  var val = parseFloat($('m4-swap-input').value);
+  var el = $('m4-swap-preview');
+  if (!val || val <= 0) { el.textContent = ''; return; }
+  if (m4SwapDir === 0) {
+    var usdc = (val / M4_RATE).toFixed(4);
+    el.textContent = '= ' + usdc + ' USDC  (환율 ' + M4_RATE + ' KRW/USD)';
+  } else {
+    var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
+    el.textContent = '= ₩' + krw + '  (환율 ' + M4_RATE + ' KRW/USD)';
+  }
+}
+
+function runSwap() {
+  var val = parseFloat($('m4-swap-input').value);
+  if (!val || val <= 0) {
+    showStatus('m4-swap-status', '금액을 입력해주세요.', false);
+    return;
+  }
+  if (m4SwapDir === 0) {
+    var usdc = (val / M4_RATE).toFixed(4);
+    showStatus('m4-swap-status', '✅ ₩' + Math.round(val).toLocaleString('ko-KR') + ' → ' + usdc + ' USDC 환전 완료 (데모)', true);
+  } else {
+    var krw = Math.round(val * M4_RATE).toLocaleString('ko-KR');
+    showStatus('m4-swap-status', '✅ ' + val.toFixed(4) + ' USDC → ₩' + krw + ' 환전 완료 (데모)', true);
+  }
+  $('m4-swap-input').value = '';
+  $('m4-swap-preview').textContent = '';
+  setTimeout(function() { $('m4-swap-status').className = 'status'; }, 3000);
 }
 
 function showToast(msg) {
