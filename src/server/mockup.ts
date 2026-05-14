@@ -1465,12 +1465,12 @@ function updateM2Btn() {
   let total = 0;
   if (checkedCbs.length === 0) {
     allItems.forEach(function(el) { total += parseFloat(el.dataset.price || '0'); });
-    btn.textContent = '전체 결제 실행 (' + total.toFixed(3) + ' USDC)';
+    btn.textContent = '전체 결제 실행 (' + total.toFixed(4) + ' USDC)';
   } else {
     checkedCbs.forEach(function(cb) {
       total += parseFloat(cb.closest('.list-item').dataset.price || '0');
     });
-    btn.textContent = checkedCbs.length + '건 결제 실행 (' + total.toFixed(3) + ' USDC)';
+    btn.textContent = checkedCbs.length + '건 결제 실행 (' + total.toFixed(4) + ' USDC)';
   }
 }
 
