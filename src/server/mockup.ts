@@ -470,6 +470,42 @@ export function getMockupHtml(): string {
     .ktx-step.active     { color: var(--text); font-weight: 600; }
     .ktx-step.done       { color: var(--success); }
 
+    /* KTX 예약 티켓 카드 */
+    .ktx-ticket { background:#fff; border-radius:18px; margin-bottom:20px; overflow:hidden; box-shadow:0 4px 24px rgba(0,0,0,.11); }
+    .ktx-ticket-hdr { background:var(--primary); padding:12px 18px; display:flex; justify-content:space-between; align-items:center; }
+    .ktx-ticket-hdr-brand { display:flex; align-items:center; gap:7px; color:#fff; font-size:13px; font-weight:800; }
+    .ktx-ticket-hdr-date { color:rgba(255,255,255,.88); font-size:12px; font-weight:600; }
+    .ktx-ticket-route-wrap { padding:22px 18px 18px; display:flex; align-items:flex-end; justify-content:center; gap:20px; }
+    .ktx-ticket-station { text-align:center; }
+    .ktx-ticket-station-name { font-size:28px; font-weight:800; color:#1e293b; }
+    .ktx-ticket-station-time { font-size:17px; font-weight:700; color:var(--primary); margin-top:4px; }
+    .ktx-ticket-arrow-col { display:flex; flex-direction:column; align-items:center; padding-bottom:6px; color:var(--primary); font-size:20px; }
+    .ktx-ticket-perf { position:relative; height:0; border-top:2px dashed #dde3ed; margin:0 0; overflow:visible; }
+    .ktx-ticket-perf::before,.ktx-ticket-perf::after { content:''; position:absolute; top:-13px; width:26px; height:26px; border-radius:50%; background:var(--bg); }
+    .ktx-ticket-perf::before { left:-13px; }
+    .ktx-ticket-perf::after { right:-13px; }
+    .ktx-ticket-body { padding:16px 18px 0; }
+    .ktx-ticket-train-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+    .ktx-ticket-trainno { font-size:15px; font-weight:700; color:#1e293b; }
+    .ktx-ticket-info-btn { font-size:11px; font-weight:600; padding:5px 13px; border-radius:999px; border:1.5px solid #dde3ed; background:#fff; color:#334155; cursor:pointer; }
+    .ktx-ticket-pax-row { display:flex; justify-content:space-between; align-items:center; padding-bottom:12px; }
+    .ktx-ticket-pax { font-size:14px; font-weight:600; color:#1e293b; }
+    .ktx-ticket-pax-count { color:var(--primary); font-weight:800; }
+    .ktx-ticket-receipt { font-size:12px; color:var(--primary); text-decoration:underline; cursor:pointer; background:none; border:none; }
+    .ktx-ticket-tbl-hd { display:grid; grid-template-columns:1fr 1fr 1fr 62px; border-top:1.5px solid #1e293b; border-bottom:1px solid #e2e8f0; padding:7px 0; }
+    .ktx-ticket-tbl-hd span { font-size:10px; color:#94a3b8; text-align:center; }
+    .ktx-ticket-tbl-row { display:grid; grid-template-columns:1fr 1fr 1fr 62px; padding:10px 0; align-items:center; border-bottom:1px solid #f1f5f9; }
+    .ktx-ticket-tbl-cell { display:flex; flex-direction:column; align-items:center; gap:1px; }
+    .ktx-ticket-tbl-main { font-size:13px; font-weight:700; color:#1e293b; }
+    .ktx-ticket-tbl-sub { font-size:10px; color:#94a3b8; }
+    .ktx-ticket-qr { width:56px; height:56px; border-radius:6px; border:1px solid #e2e8f0; overflow:hidden; }
+    .ktx-ticket-no { font-size:11px; color:#64748b; text-align:center; padding:12px 0 8px; }
+    .ktx-ticket-usdc { font-size:11px; color:var(--primary); font-weight:700; text-align:center; padding-bottom:10px; }
+    .ktx-ticket-refund-btn { width:100%; padding:14px; font-size:14px; font-weight:600; background:#f1f5f9; border:none; border-radius:10px; color:#64748b; cursor:pointer; }
+    .ktx-ticket-paydate { font-size:11px; color:#94a3b8; text-align:center; padding:10px 0 14px; }
+    .ktx-ticket-ftr { background:var(--primary); padding:9px 18px; display:flex; gap:14px; overflow:hidden; }
+    .ktx-ticket-ftr-logo { font-size:11px; font-weight:900; color:rgba(255,255,255,.55); letter-spacing:.5px; white-space:nowrap; }
+
     /* Bottom tab bar — sticks to bottom of #app */
     .tab-bar {
       position: absolute;
@@ -1561,54 +1597,172 @@ function renderKtxHistList() {
     list.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--muted);font-size:13px">예약 내역이 없습니다</div>';
     return;
   }
+  var QR_SVG =
+    '<svg width="56" height="56" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">' +
+    '<rect width="21" height="21" fill="white"/>' +
+    // 좌상단 파인더
+    '<rect x="1" y="1" width="7" height="7" rx="1" fill="#1a1a1a"/>' +
+    '<rect x="2" y="2" width="5" height="5" rx=".4" fill="white"/>' +
+    '<rect x="3" y="3" width="3" height="3" fill="#1a1a1a"/>' +
+    // 우상단 파인더
+    '<rect x="13" y="1" width="7" height="7" rx="1" fill="#1a1a1a"/>' +
+    '<rect x="14" y="2" width="5" height="5" rx=".4" fill="white"/>' +
+    '<rect x="15" y="3" width="3" height="3" fill="#1a1a1a"/>' +
+    // 좌하단 파인더
+    '<rect x="1" y="13" width="7" height="7" rx="1" fill="#1a1a1a"/>' +
+    '<rect x="2" y="14" width="5" height="5" rx=".4" fill="white"/>' +
+    '<rect x="3" y="15" width="3" height="3" fill="#1a1a1a"/>' +
+    // 데이터 모듈
+    '<rect x="9" y="1" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="11" y="1" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="3" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="12" y="3" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="10" y="5" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="12" y="5" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="1" y="9" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="4" y="9" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="6" y="9" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="9" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="12" y="9" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="14" y="9" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="17" y="9" width="3" height="1" fill="#1a1a1a"/>' +
+    '<rect x="1" y="11" width="3" height="1" fill="#1a1a1a"/>' +
+    '<rect x="5" y="11" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="11" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="11" y="11" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="15" y="11" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="18" y="11" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="13" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="13" y="13" width="4" height="1" fill="#1a1a1a"/>' +
+    '<rect x="19" y="13" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="15" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="11" y="15" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="14" y="15" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="17" y="15" width="3" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="17" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="13" y="17" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="17" y="17" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="19" y="17" width="1" height="1" fill="#1a1a1a"/>' +
+    '<rect x="9" y="19" width="3" height="1" fill="#1a1a1a"/>' +
+    '<rect x="14" y="19" width="2" height="1" fill="#1a1a1a"/>' +
+    '<rect x="18" y="19" width="2" height="1" fill="#1a1a1a"/>' +
+    '</svg>';
+
+  // 날짜 포맷: "2026.05.14(목)"
+  var DAYS = ['일','월','화','수','목','금','토'];
+  function fmtTicketDate(dateStr) {
+    if (!dateStr) { var n = new Date(); return n.getFullYear() + '.' + String(n.getMonth()+1).padStart(2,'0') + '.' + String(n.getDate()).padStart(2,'0') + '(' + DAYS[n.getDay()] + ')'; }
+    var parts = dateStr.split('.');
+    if (parts.length >= 3) {
+      var d = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
+      return parts[0] + '.' + parts[1].padStart(2,'0') + '.' + parts[2].padStart(2,'0') + '(' + DAYS[d.getDay()] + ')';
+    }
+    return dateStr;
+  }
+
   list.innerHTML = ktxReservations.map(function(r) {
-    const usdcAmt = r.priceUsdc ? Number(r.priceUsdc).toFixed(4) : '0.0100';
-    const krwAmt  = r.priceKrw  ? Number(r.priceKrw).toLocaleString('ko-KR') : '-';
+    var usdcAmt = r.priceUsdc ? Number(r.priceUsdc).toFixed(4) : '0.0100';
+    var krwAmt  = r.priceKrw  ? Number(r.priceKrw).toLocaleString('ko-KR') : '-';
+    var pax     = r.passengers || 1;
+    var carNo   = r.car   ? r.car.replace('호차','') + '호차' : '-';
+    var seat    = r.seat  || '-';
+    var cls     = r.seatClass || '일반실';
+    var dept    = r.date ? fmtTicketDate(r.date) : fmtTicketDate('');
+    // 탑승 기준 "N분전 표출" 안내 텍스트
+    var boardInfo = '15분전' + String.fromCharCode(10) + '표출';
+
     return (
-      '<div style="background:#fff;border:1px solid #e8edf5;border-radius:16px;margin-bottom:12px;overflow:hidden">' +
-        '<div style="background:var(--primary);padding:14px 16px;display:flex;justify-content:space-between;align-items:center">' +
-          '<div>' +
-            '<div style="color:#fff;font-size:11px;opacity:.75;margin-bottom:2px">' + r.trainNo + '</div>' +
-            '<div style="color:#fff;font-size:18px;font-weight:800;letter-spacing:-.5px">' + r.from + ' → ' + r.to + '</div>' +
+      // 외부 카드
+      '<div class="ktx-ticket">' +
+
+        // 헤더 (파란 바)
+        '<div class="ktx-ticket-hdr">' +
+          '<div class="ktx-ticket-hdr-brand">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/></svg>' +
+            '전북은행' +
           '</div>' +
-          '<div style="background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px;font-size:10px;color:#fff;font-weight:600">예약 확정</div>' +
+          '<div class="ktx-ticket-hdr-date">' + dept + '</div>' +
         '</div>' +
-        '<div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">' +
-          '<div style="display:flex;gap:8px">' +
-            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:10px 12px">' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">출발</div>' +
-              '<div style="font-size:15px;font-weight:700;color:var(--text)">' + r.depTime + '</div>' +
-              '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + (r.date || '') + '</div>' +
-            '</div>' +
-            '<div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:11px">' + (r.duration || '') + '</div>' +
-            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:10px 12px;text-align:right">' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:3px">도착</div>' +
-              '<div style="font-size:15px;font-weight:700;color:var(--text)">' + r.arrTime + '</div>' +
-            '</div>' +
+
+        // 출발-도착 노선
+        '<div class="ktx-ticket-route-wrap">' +
+          '<div class="ktx-ticket-station">' +
+            '<div class="ktx-ticket-station-name">' + r.from + '</div>' +
+            '<div class="ktx-ticket-station-time">' + (r.depTime || '') + '</div>' +
           '</div>' +
-          '<div style="display:flex;gap:6px">' +
-            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:8px 12px">' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">좌석</div>' +
-              '<div style="font-size:12px;font-weight:600;color:var(--text)">' + (r.car || '-') + ' ' + (r.seat || '') + ' &nbsp;·&nbsp; ' + (r.seatClass || '') + '</div>' +
-            '</div>' +
-            '<div style="flex:1;background:#f7f9fc;border-radius:10px;padding:8px 12px">' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">인원</div>' +
-              '<div style="font-size:12px;font-weight:600;color:var(--text)">' + (r.passengers || 1) + '명</div>' +
-            '</div>' +
-          '</div>' +
-          '<div style="border-top:1px solid #eef1f6;padding-top:10px;display:flex;justify-content:space-between;align-items:flex-end">' +
-            '<div>' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">결제 금액</div>' +
-              '<div style="font-size:16px;font-weight:800;color:var(--primary)">' + usdcAmt + ' USDC</div>' +
-              '<div style="font-size:10px;color:var(--muted)">₩' + krwAmt + ' 환산</div>' +
-            '</div>' +
-            '<div style="text-align:right">' +
-              '<div style="font-size:10px;color:var(--muted);margin-bottom:2px">예약번호</div>' +
-              '<div style="font-size:11px;font-weight:700;color:var(--text);font-family:monospace">' + r.reservationNo + '</div>' +
-              '<div style="font-size:10px;color:var(--muted);margin-top:2px">' + r.reservedAt + '</div>' +
-            '</div>' +
+          '<div class="ktx-ticket-arrow-col">→</div>' +
+          '<div class="ktx-ticket-station">' +
+            '<div class="ktx-ticket-station-name">' + r.to + '</div>' +
+            '<div class="ktx-ticket-station-time">' + (r.arrTime || '') + '</div>' +
           '</div>' +
         '</div>' +
+
+        // 점선 절취선
+        '<div class="ktx-ticket-perf"></div>' +
+
+        // 본문
+        '<div class="ktx-ticket-body">' +
+
+          // 열차번호 + 기차정보 버튼
+          '<div class="ktx-ticket-train-row">' +
+            '<span class="ktx-ticket-trainno">' + (r.trainNo || 'KTX') + '</span>' +
+            '<button class="ktx-ticket-info-btn" onclick="showToast(\'기차정보 (데모)\')">⏱ 기차정보</button>' +
+          '</div>' +
+
+          // 인원 + 승차권 영수증
+          '<div class="ktx-ticket-pax-row">' +
+            '<span class="ktx-ticket-pax">어른 <span class="ktx-ticket-pax-count">' + pax + '</span></span>' +
+            '<button class="ktx-ticket-receipt" onclick="showToast(\'영수증 출력 (데모)\')">승차권 영수증</button>' +
+          '</div>' +
+
+          // 테이블 헤더
+          '<div class="ktx-ticket-tbl-hd">' +
+            '<span>타는곳</span>' +
+            '<span>호차번호</span>' +
+            '<span>좌석번호</span>' +
+            '<span>승차권</span>' +
+          '</div>' +
+
+          // 테이블 데이터
+          '<div class="ktx-ticket-tbl-row">' +
+            '<div class="ktx-ticket-tbl-cell">' +
+              '<span class="ktx-ticket-tbl-main">15분전</span>' +
+              '<span class="ktx-ticket-tbl-sub">표출</span>' +
+            '</div>' +
+            '<div class="ktx-ticket-tbl-cell">' +
+              '<span class="ktx-ticket-tbl-main">' + carNo + '</span>' +
+              '<span class="ktx-ticket-tbl-sub">' + cls + '</span>' +
+            '</div>' +
+            '<div class="ktx-ticket-tbl-cell">' +
+              '<span class="ktx-ticket-tbl-main">' + seat + '</span>' +
+              '<span class="ktx-ticket-tbl-sub">순방향</span>' +
+            '</div>' +
+            '<div class="ktx-ticket-qr">' + QR_SVG + '</div>' +
+          '</div>' +
+
+          // 승차권 번호
+          '<div class="ktx-ticket-no">승차권 번호 : ' + r.reservationNo + '</div>' +
+
+          // USDC 결제 금액
+          '<div class="ktx-ticket-usdc">' + usdcAmt + ' USDC &nbsp;(₩' + krwAmt + ')</div>' +
+
+          // 반환 버튼
+          '<button class="ktx-ticket-refund-btn" onclick="showToast(\'반환 처리는 지원되지 않습니다\')">승차권 반환</button>' +
+
+          // 결제일시
+          '<div class="ktx-ticket-paydate">결제일시 : ' + r.reservedAt + '</div>' +
+
+        '</div>' +
+
+        // 푸터 로고 바
+        '<div class="ktx-ticket-ftr">' +
+          '<span class="ktx-ticket-ftr-logo">KORAIL</span>' +
+          '<span class="ktx-ticket-ftr-logo">KORAIL</span>' +
+          '<span class="ktx-ticket-ftr-logo">KORAIL</span>' +
+          '<span class="ktx-ticket-ftr-logo">KORAIL</span>' +
+          '<span class="ktx-ticket-ftr-logo">KORAIL</span>' +
+        '</div>' +
+
       '</div>'
     );
   }).join('');
