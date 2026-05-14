@@ -291,15 +291,15 @@ export function getMockupHtml(): string {
     .fill.orange { background: linear-gradient(90deg, #ff8b1f, #ffb34f); }
 
     /* Transaction list */
-    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .tx-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; gap: 8px; }
     .tx-row:last-child { border-bottom: none; }
-    .tx-left  { display: flex; align-items: center; gap: 12px; }
-    .tx-icon  { width: 36px; height: 36px; border-radius: 10px; background: #eaf1fb; display: grid; place-items: center; font-size: 16px; }
-    .tx-info  { display: flex; flex-direction: column; gap: 2px; }
-    .tx-name  { font-weight: 600; font-size: 13px; }
-    .tx-time  { font-size: 11px; color: var(--muted); }
-    .tx-amt   { font-weight: 700; font-size: 13px; }
-    .tx-amt.minus { color: var(--danger); }
+    .tx-left  { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+    .tx-icon  { width: 34px; height: 34px; border-radius: 10px; background: #eaf1fb; display: grid; place-items: center; font-size: 15px; flex-shrink: 0; }
+    .tx-info  { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .tx-name  { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-time  { font-size: 10px; color: var(--muted); white-space: nowrap; }
+    .tx-amt   { font-weight: 700; font-size: 12px; flex-shrink: 0; text-align: right; white-space: nowrap; }
+    .tx-amt.minus { color: var(--accent); }
     .tx-amt.plus  { color: var(--success); }
 
     /* Buttons */
